@@ -27,9 +27,8 @@ public class TZClocksDataManager {
     private final ConfigManager configManager;
     private final Gson gson;
 
-    private List<String> timezoneIds = new ArrayList<>();
-    private final Type timezoneIdsType = new TypeToken<ArrayList<String>>() {}.getType(); //not sure what this does either
-    private final Type itemsType = new TypeToken<ArrayList<String>>() {}.getType(); //takes saved data from data manager for conversion
+    private List<TZClocksItem> timezoneItems = new ArrayList<>();
+    private final Type timezoneItemsType = new TypeToken<ArrayList<TZClocksItem>>() {}.getType(); //takes saved data from data manager for conversion
     @Inject
     public TZClocksDataManager(TZClocksPlugin plugin, Client client, ConfigManager configManager, Gson gson) { //saves time zones between client sessions
         this.plugin = plugin;
@@ -52,14 +51,14 @@ public class TZClocksDataManager {
             return false;
         }
 
-        timezoneIds.clear();
+        timezoneItems.clear();
 
         String timezonesJson = configManager.getConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES);
         if (timezonesJson == null || timezonesJson.equals(EMPTY_ARRAY)) {
             plugin.setTimezones(new ArrayList<>());
         } else {
             try {
-                timezoneIds = gson.fromJson(timezonesJson, itemsType);
+                timezoneItems = gson.fromJson(timezonesJson, timezoneItemsType); // Use timezoneItemsType
                 convertItems();
             } catch (Exception e) {
                 log.error(LOAD_TIMEZONE_ERROR, e);
@@ -67,28 +66,28 @@ public class TZClocksDataManager {
             }
         }
 
-
         plugin.updateTimezoneData();
         return true;
     }
 
     public void saveData() { //saves data to config
-        timezoneIds.clear();
+        List<TZClocksItem> tempTimezoneItems = new ArrayList<>(); // Temporary list
 
         for (TZClocksItem item : plugin.getTimezones()) {
-            timezoneIds.add(item.getName());
+            tempTimezoneItems.add(item); // Add to the temporary list
         }
 
-        final String timezonesJson = gson.toJson(timezoneIds);
-        configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES, timezonesJson);
+        timezoneItems = tempTimezoneItems; // Atomically replace the original list
 
+        final String timezonesJson = gson.toJson(timezoneItems);
+        configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES, timezonesJson);
     }
 
     private void convertItems() { //converts time zones for loading
         List<TZClocksItem> watchItems = new ArrayList<>();
 
-        for (String timezoneId : timezoneIds) {
-            watchItems.add(convertIdToItem(timezoneId));
+        for (TZClocksItem timezoneItem : timezoneItems) { // Use timezoneItems
+            watchItems.add(convertIdToItem(timezoneItem.getName()));
         }
 
         plugin.setTimezones(watchItems);

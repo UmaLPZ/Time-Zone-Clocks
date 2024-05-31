@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 public class TZClocksPluginPanel extends PluginPanel {
 
-    private final List<TZClocksItem> timezones = new ArrayList<>();
     private final List<TZClocksItemPanel> TZClocksItemPanels = new ArrayList<>();
     private final JComboBox<TZRegionEnum> regionDropdown;
     private final Map<TZClocksItem, TZClocksItemPanel> timezonePanelsMap = new HashMap<>();
@@ -154,15 +153,19 @@ public class TZClocksPluginPanel extends PluginPanel {
         }
     }
 
-    public void refreshTimeDisplays( ) { //refreshes panel when adding new time zone
+    public void refreshTimeDisplays() { //refreshes panel when adding new time zone
         DateTimeFormatter formatter = plugin.getFormatter();
-        for (TZClocksItem item : timezones) {
+        for (TZClocksItem item : plugin.getTimezones()) { // Get timezones from the plugin
             ZoneId zoneId = ZoneId.of(item.getName());
             ZonedDateTime now = ZonedDateTime.now(zoneId);
-            item.setCurrentTime(now.format(formatter));
-        }
-        for (TZClocksItemPanel panel : TZClocksItemPanels) {
-            panel.updateTime();
+            String currentTime = now.format(formatter);
+            item.setCurrentTime(currentTime);
+
+            // Update the corresponding panel directly
+            TZClocksItemPanel panel = timezonePanelsMap.get(item);
+            if (panel != null) {
+                panel.updateTime();
+            }
         }
     }
 
@@ -174,4 +177,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         repaint();
     }
 
+    public Map<TZClocksItem, TZClocksItemPanel> getTimezonePanelsMap() {
+        return timezonePanelsMap;
+    }
 }
