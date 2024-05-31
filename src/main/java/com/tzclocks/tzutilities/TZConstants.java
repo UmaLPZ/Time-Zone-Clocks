@@ -10,7 +10,6 @@ public final class TZConstants {
 
     public static final String PANEL_ICON_PATH = "/tzpanelicon.png"; //icon for panel
     public static final String DELETE_ICON_PATH = "/tzdeleteicon.png"; //icon for delete
-
-
+    public static final String EDIT_ICON_PATH = "/tzediticon.png"; //icon for edit
 
 }

@@ -34,8 +34,8 @@ public class TZClocksPluginPanel extends PluginPanel {
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     public void activatePanel() {
-        scheduler.scheduleAtFixedRate(this::refreshTimeDisplays, 0, 1, TimeUnit.SECONDS);
-    } //makes clock(s) in panel update every second
+        scheduler.scheduleAtFixedRate(this::refreshTimeDisplays, 0, 1, TimeUnit.SECONDS); //makes clock(s) in panel update every second
+    }
     public TZClocksPluginPanel(TZClocksPlugin plugin, TZClocksConfig config) { //panel for the plugin. dropdowns and button
         List<String> zoneIds = new ArrayList<>(ZoneId.getAvailableZoneIds());
         Collections.sort(zoneIds);
@@ -43,22 +43,21 @@ public class TZClocksPluginPanel extends PluginPanel {
         this.config = config;
         setBorder(new EmptyBorder(10, 10, 10, 10));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
-        setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 1.0;
-        c.gridx = 0;
-        c.gridy = 0;
+        setLayout(new BorderLayout());
+
+        JPanel topPanel = new JPanel(new GridLayout(4, 1, 0, 5));
+        topPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
+
         regionDropdown = new JComboBox<>(); //dropdown for selecting the region
         for (TZRegionEnum region : TZRegionEnum.values()) {
             regionDropdown.addItem(region);
         }
         regionDropdown.addActionListener(e -> updateTimeZoneDropdown());
-        add(regionDropdown, c);
-        c.gridy++;
+        topPanel.add(regionDropdown);
+
         timezoneDropdown = new JComboBox<>(); //dropdown for selecting the time zone
-        add(timezoneDropdown, c);
-        c.gridy++;
+        topPanel.add(timezoneDropdown);
+
         JButton addButton = new JButton("Add Timezone");
         addButton.addActionListener(new ActionListener() {
             @Override
@@ -69,11 +68,26 @@ public class TZClocksPluginPanel extends PluginPanel {
                 }
             }
         });
-        add(addButton, c);
-        c.gridy++;
-        clockPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+        topPanel.add(addButton);
+
+        add(topPanel, BorderLayout.NORTH);
+
+        clockPanel = new JPanel(new GridBagLayout());
         clockPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        add(clockPanel, c);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(clockPanel, BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane(wrapper);
+        scrollPane.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(12, 0));
+        scrollPane.getVerticalScrollBar().setBorder(new EmptyBorder(5, 5, 0, 0));
+        add(scrollPane, BorderLayout.CENTER);
+
         scheduler.scheduleAtFixedRate(this::refreshTimeDisplays, 0, 1, TimeUnit.SECONDS);
         updateTimeZoneDropdown();
     }
@@ -107,16 +121,34 @@ public class TZClocksPluginPanel extends PluginPanel {
         TZClocksItemPanel TZClocksItemPanel = new TZClocksItemPanel(plugin, item);
         TZClocksItemPanels.add(TZClocksItemPanel);
         timezonePanelsMap.put(item, TZClocksItemPanel);
-        clockPanel.add(TZClocksItemPanel);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        gbc.gridx = 0;
+        gbc.gridy = timezonePanelsMap.size() - 1;
+
+        JPanel containerPanel = new JPanel(new BorderLayout());
+        containerPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        containerPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+        containerPanel.add(TZClocksItemPanel, BorderLayout.CENTER); //
+
+        clockPanel.add(containerPanel, gbc); // Add the container panel to the clock panel
         revalidate();
         repaint();
     }
 
     public void removeTimezonePanel(TZClocksItem item) { //removes time zone from panel
-        TZClocksItemPanel timezonePanelToRemove = timezonePanelsMap.remove(item);
-        if (timezonePanelToRemove != null) {
-            clockPanel.remove(timezonePanelToRemove);
-            TZClocksItemPanels.remove(timezonePanelToRemove);
+        TZClocksItemPanel panelToRemove = timezonePanelsMap.remove(item);
+        if (panelToRemove != null) {
+            for (Component component : clockPanel.getComponents()) {
+                if (component instanceof JPanel && ((JPanel) component).getComponent(0) == panelToRemove) {
+                    clockPanel.remove(component);
+                    break;
+                }
+            }
+
+            TZClocksItemPanels.remove(panelToRemove);
             revalidate();
             repaint();
         }
