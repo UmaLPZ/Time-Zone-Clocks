@@ -8,7 +8,7 @@ This plugin's code is heavily based off the code for the [Market Watcher](https:
 * Add option to show difference from local time
 * Add categories for organizing clocks (similar to Market Watcher)
 * Add ability to reposition clocks (also similar to Market Watcher)
-* Ability to rename clocks
+* ~~Ability to rename clocks~~ Added in v1.1
 
 # Known Bugs
 * There is currently an issue where turning off the plugin will stop the clocks from updating the time. You will need to restart the client to fix this. I will be looking into an alternative for how the clocks update to fix this.

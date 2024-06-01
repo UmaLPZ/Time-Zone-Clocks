@@ -26,6 +26,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +51,7 @@ public class TZClocksPlugin extends Plugin {
 	private TZClocksConfig config;
 
 	@Inject
-	private TZClocksDataManager dataManager;
+	public TZClocksDataManager dataManager; // Make dataManager public
 
 	private TZClocksPluginPanel panel;
 	private NavigationButton navButton;
@@ -98,7 +99,7 @@ public class TZClocksPlugin extends Plugin {
 		ZonedDateTime now = ZonedDateTime.now(zoneId);
 		DateTimeFormatter formatter = getFormatter();
 		String currentTime = now.format(formatter);
-		TZClocksItem newItem = new TZClocksItem(timezoneId, currentTime);
+		TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, null); // Generate UUID, set customName to null
 		timezones.add(newItem);
 		panel.addTimezonePanel(newItem);
 		dataManager.saveData();

@@ -15,6 +15,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 public class TZClocksDataManager {
@@ -58,13 +59,14 @@ public class TZClocksDataManager {
             plugin.setTimezones(new ArrayList<>());
         } else {
             try {
-                timezoneItems = gson.fromJson(timezonesJson, timezoneItemsType); // Use timezoneItemsType
+                timezoneItems = gson.fromJson(timezonesJson, timezoneItemsType);
                 convertItems();
             } catch (Exception e) {
                 log.error(LOAD_TIMEZONE_ERROR, e);
                 plugin.setTimezones(new ArrayList<>());
             }
         }
+
 
         plugin.updateTimezoneData();
         return true;
@@ -81,23 +83,24 @@ public class TZClocksDataManager {
 
         final String timezonesJson = gson.toJson(timezoneItems);
         configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES, timezonesJson);
+
     }
 
     private void convertItems() { //converts time zones for loading
         List<TZClocksItem> watchItems = new ArrayList<>();
 
-        for (TZClocksItem timezoneItem : timezoneItems) { // Use timezoneItems
-            watchItems.add(convertIdToItem(timezoneItem.getName()));
+        for (TZClocksItem timezoneItem : timezoneItems) {
+            watchItems.add(convertIdToItem(timezoneItem.getUuid(), timezoneItem.getName(), timezoneItem.getCustomName()));
         }
 
         plugin.setTimezones(watchItems);
     }
 
-    private TZClocksItem convertIdToItem(String timezoneId) { //also converts time zones for loading
+    private TZClocksItem convertIdToItem(UUID uuid, String timezoneId, String customName) { //also converts time zones for loading
         ZoneId zoneId = ZoneId.of(timezoneId);
         ZonedDateTime now = ZonedDateTime.now(zoneId);
         DateTimeFormatter formatter = plugin.getFormatter();
         String currentTime = now.format(formatter);
-        return new TZClocksItem(timezoneId, currentTime);
+        return new TZClocksItem(uuid, timezoneId, currentTime, customName);
     }
 }

@@ -42,7 +42,13 @@ public class TZClocksPluginPanel extends PluginPanel {
         this.config = config;
         setBorder(new EmptyBorder(10, 10, 10, 10));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
-        setLayout(new BorderLayout());
+        setLayout(new GridBagLayout()); // Use GridBagLayout for main panel
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
 
         JPanel topPanel = new JPanel(new GridLayout(4, 1, 0, 5));
         topPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -69,23 +75,20 @@ public class TZClocksPluginPanel extends PluginPanel {
         });
         topPanel.add(addButton);
 
-        add(topPanel, BorderLayout.NORTH);
+        add(topPanel, gbc);
+
+        gbc.gridy++;
+        gbc.weighty = 1; // Make scroll pane expand vertically
+        gbc.fill = GridBagConstraints.BOTH;
 
         clockPanel = new JPanel(new GridBagLayout());
         clockPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.add(clockPanel, BorderLayout.NORTH);
-        JScrollPane scrollPane = new JScrollPane(wrapper);
+        JScrollPane scrollPane = new JScrollPane(clockPanel); // Add clockPanel directly to JScrollPane
         scrollPane.setBackground(ColorScheme.DARK_GRAY_COLOR);
         scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(12, 0));
         scrollPane.getVerticalScrollBar().setBorder(new EmptyBorder(5, 5, 0, 0));
-        add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, gbc); // Add scroll pane to the main panel
 
         scheduler.scheduleAtFixedRate(this::refreshTimeDisplays, 0, 1, TimeUnit.SECONDS);
         updateTimeZoneDropdown();
@@ -122,15 +125,16 @@ public class TZClocksPluginPanel extends PluginPanel {
         timezonePanelsMap.put(item, TZClocksItemPanel);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill = GridBagConstraints.BOTH; // Expand both horizontally and vertically
         gbc.weightx = 1;
+        gbc.weighty = 1; // Allow vertical expansion
         gbc.gridx = 0;
         gbc.gridy = timezonePanelsMap.size() - 1;
 
         JPanel containerPanel = new JPanel(new BorderLayout());
         containerPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
         containerPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
-        containerPanel.add(TZClocksItemPanel, BorderLayout.CENTER); //
+        containerPanel.add(TZClocksItemPanel, BorderLayout.CENTER);
 
         clockPanel.add(containerPanel, gbc); // Add the container panel to the clock panel
         revalidate();
@@ -153,19 +157,15 @@ public class TZClocksPluginPanel extends PluginPanel {
         }
     }
 
-    public void refreshTimeDisplays() { //refreshes panel when adding new time zone
+    public void refreshTimeDisplays( ) { //refreshes panel when adding new time zone
         DateTimeFormatter formatter = plugin.getFormatter();
-        for (TZClocksItem item : plugin.getTimezones()) { // Get timezones from the plugin
+        for (TZClocksItem item : plugin.getTimezones()) {
             ZoneId zoneId = ZoneId.of(item.getName());
             ZonedDateTime now = ZonedDateTime.now(zoneId);
-            String currentTime = now.format(formatter);
-            item.setCurrentTime(currentTime);
-
-            // Update the corresponding panel directly
-            TZClocksItemPanel panel = timezonePanelsMap.get(item);
-            if (panel != null) {
-                panel.updateTime();
-            }
+            item.setCurrentTime(now.format(formatter));
+        }
+        for (TZClocksItemPanel panel : TZClocksItemPanels) {
+            panel.updateTime();
         }
     }
 
@@ -177,7 +177,4 @@ public class TZClocksPluginPanel extends PluginPanel {
         repaint();
     }
 
-    public Map<TZClocksItem, TZClocksItemPanel> getTimezonePanelsMap() {
-        return timezonePanelsMap;
-    }
 }

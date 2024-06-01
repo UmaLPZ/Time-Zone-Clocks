@@ -18,45 +18,91 @@ public class TZClocksItemPanel extends JPanel {
     private static final String DELETE_TITLE = "Warning";
     private static final String DELETE_MESSAGE = "Are you sure you want to delete this item?";
     private static final ImageIcon DELETE_ICON;
-    private static final ImageIcon DELETE_HOVER_ICON;;
+    private static final ImageIcon DELETE_HOVER_ICON;
+    private static final ImageIcon EDIT_ICON;
+    private static final ImageIcon EDIT_HOVER_ICON;
 
+    private final TZClocksPlugin plugin; // Reference to the plugin
     private final TZClocksItem item;
     private final JLabel currentTimeLabel;
+    private final JLabel timezoneNameLabel; // Label for displaying the timezone name
+    private final JLabel customNameLabel; // Label for displaying the custom name
 
     static {
         final BufferedImage deleteImage = ImageUtil.loadImageResource(TZClocksItemPanel.class, DELETE_ICON_PATH);
         DELETE_ICON = new ImageIcon(deleteImage);
         DELETE_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(deleteImage, 0.53f));
 
+        final BufferedImage editImage = ImageUtil.loadImageResource(TZClocksItemPanel.class, EDIT_ICON_PATH);
+        EDIT_ICON = new ImageIcon(editImage);
+        EDIT_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(editImage, 0.53f));
+
 
     }
 
     TZClocksItemPanel(TZClocksPlugin plugin, TZClocksItem item) { //format and buttons for added time zones
+        this.plugin = plugin; // Assign the plugin reference
         this.item = item;
         setLayout(new BorderLayout(5, 0));
         setBorder(new EmptyBorder(5, 5, 5, 0));
 
-        int itemIndex = plugin.getTimezones().indexOf(item); //need to check if actually used or not
-        int itemsSize = plugin.getTimezones().size(); //same as above
-
-        JPanel timezoneDetailsPanel = new JPanel(new GridLayout(2, 1));
+        JPanel timezoneDetailsPanel = new JPanel(new GridBagLayout());
         timezoneDetailsPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
-        JLabel timezoneName = new JLabel();
-        timezoneName.setForeground(Color.WHITE);
-        timezoneName.setText(item.getName());
-        timezoneDetailsPanel.add(timezoneName);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
 
+        customNameLabel = new JLabel(); // Initialize the custom name label
+        customNameLabel.setForeground(Color.WHITE);
+        timezoneDetailsPanel.add(customNameLabel, gbc); // Added customNameLabel to the panel before calling updateCustomName
+
+        gbc.gridy++;
+        timezoneNameLabel = new JLabel(); // Initialize the timezone name label
+        timezoneNameLabel.setForeground(Color.WHITE);
+        timezoneNameLabel.setText(item.getName()); // Display the timezone ID
+        timezoneDetailsPanel.add(timezoneNameLabel, gbc);
+
+        gbc.gridy++;
         currentTimeLabel = new JLabel();
         currentTimeLabel.setForeground(Color.WHITE);
         currentTimeLabel.setText(item.getCurrentTime());
-        timezoneDetailsPanel.add(currentTimeLabel);
-        JPanel actionPanel = new JPanel(new BorderLayout());
+        timezoneDetailsPanel.add(currentTimeLabel, gbc);
+
+        updateCustomName(); // Call updateCustomName() after timezoneNameLabel is initialized
+
+        // Action Panel (Delete, Edit)
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         actionPanel.setBackground(new Color(0, 0, 0, 0));
         actionPanel.setOpaque(false);
-        JLabel deleteItem = new JLabel(DELETE_ICON);
-        deleteItem.setBorder(new EmptyBorder(0, 0, 0, 3));
-        deleteItem.addMouseListener(new MouseAdapter() {
+
+        // Edit button
+        JLabel editButton = new JLabel(EDIT_ICON);
+        editButton.setBorder(new EmptyBorder(0, 0, 0, 5));
+        editButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                editCustomName();
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                editButton.setIcon(EDIT_HOVER_ICON);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                editButton.setIcon(EDIT_ICON);
+            }
+        });
+        actionPanel.add(editButton);
+
+        // Delete button
+        JLabel deleteButton = new JLabel(DELETE_ICON);
+        deleteButton.setBorder(new EmptyBorder(0, 0, 0, 3));
+        deleteButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (deleteConfirm()) {
@@ -66,18 +112,38 @@ public class TZClocksItemPanel extends JPanel {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                deleteItem.setIcon(DELETE_HOVER_ICON);
+                deleteButton.setIcon(DELETE_HOVER_ICON);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                deleteItem.setIcon(DELETE_ICON);
+                deleteButton.setIcon(DELETE_ICON);
             }
         });
-        actionPanel.add(deleteItem, BorderLayout.NORTH);
+        actionPanel.add(deleteButton);
+
 
         add(timezoneDetailsPanel, BorderLayout.WEST);
         add(actionPanel, BorderLayout.EAST);
+    }
+
+    private void updateCustomName() {
+        if (item.getCustomName() != null) {
+            customNameLabel.setText(item.getCustomName());
+            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0)); // Add spacing above timezone name
+        } else {
+            customNameLabel.setText(""); // Blank by default
+            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0)); // Remove spacing
+        }
+    }
+
+    private void editCustomName() {
+        String newName = JOptionPane.showInputDialog(this, "Enter a custom name:", item.getCustomName());
+        if (newName != null) {
+            item.setCustomName(newName);
+            updateCustomName();
+            plugin.dataManager.saveData(); // Save the changes
+        }
     }
 
     private boolean deleteConfirm() { //self-explanatory
