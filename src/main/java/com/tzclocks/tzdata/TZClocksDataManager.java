@@ -59,14 +59,27 @@ public class TZClocksDataManager {
             plugin.setTimezones(new ArrayList<>());
         } else {
             try {
-                timezoneItems = gson.fromJson(timezonesJson, timezoneItemsType);
+                // Check if the loaded data contains UUIDs (new format)
+                if (timezonesJson.contains("\"uuid\":")) {
+                    // Load as new format
+                    timezoneItems = gson.fromJson(timezonesJson, timezoneItemsType);
+                } else {
+                    // Load as old format (List<String>)
+                    Type oldItemsType = new TypeToken<ArrayList<String>>() {}.getType();
+                    List<String> oldTimezoneIds = gson.fromJson(timezonesJson, oldItemsType);
+
+                    // Convert old format to new format
+                    for (String timezoneId : oldTimezoneIds) {
+                        timezoneItems.add(convertIdToItem(UUID.randomUUID(), timezoneId, null));
+                    }
+                }
+
                 convertItems();
             } catch (Exception e) {
                 log.error(LOAD_TIMEZONE_ERROR, e);
                 plugin.setTimezones(new ArrayList<>());
             }
         }
-
 
         plugin.updateTimezoneData();
         return true;
@@ -79,7 +92,7 @@ public class TZClocksDataManager {
             tempTimezoneItems.add(item); // Add to the temporary list
         }
 
-        timezoneItems = tempTimezoneItems; // Atomically replace the original list
+        timezoneItems = tempTimezoneItems; // Automigically replace the original list
 
         final String timezonesJson = gson.toJson(timezoneItems);
         configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES, timezonesJson);
