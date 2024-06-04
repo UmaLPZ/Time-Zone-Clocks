@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public enum TZRegionEnum { //List of regions and their zoneIDs. Filtered down to only show unique UTC sections
     ALL("All Regions"),
+    SPECIAL_TIMES("Special Times",
+            ZoneId.systemDefault(),
+            ZoneId.of("Europe/London")),
     AFRICA("Africa",
             ZoneId.of("Africa/Abidjan"), ZoneId.of("Africa/Accra"), ZoneId.of("Africa/Algiers"),
             ZoneId.of("Africa/Bissau"), ZoneId.of("Africa/Cairo"), ZoneId.of("Africa/Casablanca"),
@@ -108,6 +111,10 @@ public enum TZRegionEnum { //List of regions and their zoneIDs. Filtered down to
     TZRegionEnum(String name, ZoneId... zoneIds) {
         this.name = name;
         this.zoneIds = List.of(zoneIds);
+    }
+    @Override
+    public String toString() {
+        return name; // Return the name field
     }
 
     public List<ZoneId> getZoneIds() {

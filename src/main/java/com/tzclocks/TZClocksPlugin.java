@@ -95,11 +95,19 @@ public class TZClocksPlugin extends Plugin {
 	} //supposedly saves to the RL config manager. Not actually sure but other plugins use the same thing. Need to actually spend time learning how it works
 
 	public void addTimezoneToPanel(String timezoneId) { //adds clock to the panel and saves data to data manager
+		String customName = null;
+
+		if (timezoneId.equals(ZoneId.systemDefault().toString())) {
+			customName = "Local Time";
+		} else if (timezoneId.equals("Europe/London")) {
+			customName = "Jagex Time";
+		}
+
 		ZoneId zoneId = ZoneId.of(timezoneId);
 		ZonedDateTime now = ZonedDateTime.now(zoneId);
 		DateTimeFormatter formatter = getFormatter();
 		String currentTime = now.format(formatter);
-		TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, null); // Generate UUID, set customName to null
+		TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, customName);
 		timezones.add(newItem);
 		panel.addTimezonePanel(newItem);
 		dataManager.saveData();
