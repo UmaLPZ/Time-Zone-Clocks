@@ -1,11 +1,12 @@
 package com.tzclocks;
 
 import com.tzclocks.tzconfig.TZClocksConfig;
-import com.tzclocks.tzdata.TZClocksCategory;
 import com.tzclocks.tzdata.TZClocksDataManager;
 import com.tzclocks.tzdata.TZClocksItem;
+import com.tzclocks.tzdata.TZClocksTab;
 import com.tzclocks.tzdata.TZFormatEnum;
 import com.tzclocks.tzui.TZClocksPluginPanel;
+import com.tzclocks.tzui.TZClocksTabPanel; // Import TZClocksTabPanel
 import com.google.inject.Provides;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +27,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -52,9 +52,11 @@ public class TZClocksPlugin extends Plugin {
 	private TZClocksConfig config;
 
 	@Inject
-	public TZClocksDataManager dataManager; // Make dataManager public
+	public TZClocksDataManager dataManager;
 
+	@Getter
 	private TZClocksPluginPanel panel;
+
 	private NavigationButton navButton;
 
 	@Getter
@@ -62,7 +64,7 @@ public class TZClocksPlugin extends Plugin {
 	private List<TZClocksItem> timezones = new ArrayList<>();
 
 	@Getter
-	private List<TZClocksCategory> categories = new ArrayList<>();
+	private List<TZClocksTab> tabs = new ArrayList<>();
 
 
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(); //updates the clocks as scheduled. Might be a better alternative
@@ -79,12 +81,8 @@ public class TZClocksPlugin extends Plugin {
 				.build();
 		clientToolbar.addNavigation(navButton);
 		dataManager.loadData();
-
-		// Add default "Uncategorized" category
-		categories.add(new TZClocksCategory("Uncategorized"));
-
 		refreshTimezonePanels();
-		panel.activatePanel();
+		//panel.activatePanel(); // Removed call to activatePanel
 
 		scheduler.scheduleAtFixedRate(this::updateTimezoneData, 0, 1, TimeUnit.SECONDS);
 	}
@@ -117,19 +115,13 @@ public class TZClocksPlugin extends Plugin {
 		TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, customName);
 		timezones.add(newItem);
 
-		// Add the clock to the "Uncategorized" category
-		categories.get(0).addClock(newItem.getUuid());
-
 		panel.addTimezonePanel(newItem);
 		dataManager.saveData();
 	}
 
 	public void removeTimezoneFromPanel(TZClocksItem item) { //removes clock from the panel and updates data in the data manager
 		timezones.remove(item);
-
-		// Remove clock from its category
-		removeFromCategory(item.getUuid());
-
+		removeClockFromTab(item); // Remove from its tab, if any
 		dataManager.saveData();
 		SwingUtilities.invokeLater(() -> panel.removeTimezonePanel(item));
 	}
@@ -137,14 +129,27 @@ public class TZClocksPlugin extends Plugin {
 	public void refreshTimezonePanels() { //refreshes panel on start up
 		SwingUtilities.invokeLater(() -> {
 			panel.removeAllClocks();
-			for (TZClocksCategory category : categories) {
-				panel.addCategoryPanel(category);
-				if (!category.isCollapsed()) {
-					for (UUID clockId : category.getClocks()) {
-						Optional<TZClocksItem> clockItem = timezones.stream()
-								.filter(item -> item.getUuid().equals(clockId))
-								.findFirst();
-						clockItem.ifPresent(panel::addTimezonePanel);
+
+			// Add all clocks to the main panel
+			for (TZClocksItem item : timezones) {
+				panel.addTimezonePanel(item);
+			}
+
+			// Add tab panels after adding clocks
+			for (TZClocksTab tab : tabs) {
+				panel.addTabPanel(tab);
+
+				// Add the clocks belonging to each tab
+				for (UUID clockId : tab.getClocks()) {
+					// Find the clock item
+					TZClocksItem clockItem = timezones.stream()
+							.filter(item -> item.getUuid().equals(clockId))
+							.findFirst()
+							.orElse(null); // Handle the case where the clock might not be found
+
+					// Add the clock panel if found
+					if (clockItem != null) {
+						panel.addTimezonePanel(clockItem);
 					}
 				}
 			}
@@ -169,42 +174,51 @@ public class TZClocksPlugin extends Plugin {
 		}
 	}
 
-	// Category Management Methods
+	// Tab Management Methods
 
-	public void addCategory(String categoryName) {
-		categories.add(new TZClocksCategory(categoryName));
-		SwingUtilities.invokeLater(() -> panel.addCategoryPanel(categories.get(categories.size() - 1)));
+	public void addTab(String tabName) {
+		tabs.add(new TZClocksTab(tabName));
+		SwingUtilities.invokeLater(() -> panel.addTabPanel(tabs.get(tabs.size() - 1)));
 		dataManager.saveData();
 	}
 
-	public void renameCategory(TZClocksCategory category, String newName) {
-		category.setName(newName);
-		SwingUtilities.invokeLater(() -> panel.renameCategoryPanel(category));
+	public void renameTab(TZClocksTab tab, String newName) {
+		tab.setName(newName);
 		dataManager.saveData();
 	}
 
-	public void deleteCategory(TZClocksCategory category, boolean deleteClocks) {
+	public void deleteTab(TZClocksTab tab, boolean deleteClocks) {
 		if (deleteClocks) {
 			// Remove clocks from the plugin's list
-			category.getClocks().forEach(clockId -> timezones.removeIf(item -> item.getUuid().equals(clockId)));
-		} else {
-			// Move clocks to "Uncategorized" category
-			TZClocksCategory uncategorized = categories.get(0);
-			category.getClocks().forEach(uncategorized::addClock);
+			tab.getClocks().forEach(clockId -> timezones.removeIf(item -> item.getUuid().equals(clockId)));
 		}
 
-		categories.remove(category);
-		SwingUtilities.invokeLater(() -> panel.removeCategoryPanel(category));
+		tabs.remove(tab);
+		SwingUtilities.invokeLater(() -> panel.removeTabPanel(tab));
 		dataManager.saveData();
 	}
 
-	// Helper method to remove a clock from its current category
-	private void removeFromCategory(UUID clockId) {
-		for (TZClocksCategory category : categories) {
-			if (category.getClocks().contains(clockId)) {
-				category.removeClock(clockId);
-				break;
+	public void removeClockFromTab(TZClocksItem clock) {
+		// Find the tab containing the clock
+		for (TZClocksTab tab : tabs) {
+			if (tab.getClocks().contains(clock.getUuid())) {
+				tab.removeClock(clock.getUuid());
+
+				// Refresh the tab panel to reflect the removal
+				SwingUtilities.invokeLater(() -> {
+					TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab); // Access getTabPanelsMap()
+					if (tabPanel != null) {
+						tabPanel.toggleTabCollapse(); // Call toggleTabCollapse on the tabPanel
+						tabPanel.toggleTabCollapse();
+					}
+				});
+
+				break; // No need to continue searching
 			}
 		}
+	}
+
+	public void setTabs(List<TZClocksTab> tabs) {
+		this.tabs = tabs;
 	}
 }

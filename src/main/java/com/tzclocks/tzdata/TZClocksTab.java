@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class TZClocksCategory {
+public class TZClocksTab {
     private String name;
     private List<UUID> clocks;
     private boolean collapsed;
 
-    public TZClocksCategory(String name) {
+    public TZClocksTab(String name) {
         this.name = name;
         this.clocks = new ArrayList<>();
-        this.collapsed = true; // Categories are collapsed by default
+        this.collapsed = true; // Tabs are collapsed by default
     }
 
     public String getName() {
