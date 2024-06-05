@@ -1,10 +1,10 @@
 package com.tzclocks;
 
 import com.tzclocks.tzconfig.TZClocksConfig;
+import com.tzclocks.tzdata.TZClocksCategory;
 import com.tzclocks.tzdata.TZClocksDataManager;
 import com.tzclocks.tzdata.TZClocksItem;
 import com.tzclocks.tzdata.TZFormatEnum;
-
 import com.tzclocks.tzui.TZClocksPluginPanel;
 import com.google.inject.Provides;
 import lombok.Getter;
@@ -26,6 +26,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -60,6 +61,8 @@ public class TZClocksPlugin extends Plugin {
 	@Setter
 	private List<TZClocksItem> timezones = new ArrayList<>();
 
+	@Getter
+	private List<TZClocksCategory> categories = new ArrayList<>();
 
 
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(); //updates the clocks as scheduled. Might be a better alternative
@@ -76,6 +79,10 @@ public class TZClocksPlugin extends Plugin {
 				.build();
 		clientToolbar.addNavigation(navButton);
 		dataManager.loadData();
+
+		// Add default "Uncategorized" category
+		categories.add(new TZClocksCategory("Uncategorized"));
+
 		refreshTimezonePanels();
 		panel.activatePanel();
 
@@ -109,12 +116,20 @@ public class TZClocksPlugin extends Plugin {
 		String currentTime = now.format(formatter);
 		TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, customName);
 		timezones.add(newItem);
+
+		// Add the clock to the "Uncategorized" category
+		categories.get(0).addClock(newItem.getUuid());
+
 		panel.addTimezonePanel(newItem);
 		dataManager.saveData();
 	}
 
 	public void removeTimezoneFromPanel(TZClocksItem item) { //removes clock from the panel and updates data in the data manager
 		timezones.remove(item);
+
+		// Remove clock from its category
+		removeFromCategory(item.getUuid());
+
 		dataManager.saveData();
 		SwingUtilities.invokeLater(() -> panel.removeTimezonePanel(item));
 	}
@@ -122,8 +137,16 @@ public class TZClocksPlugin extends Plugin {
 	public void refreshTimezonePanels() { //refreshes panel on start up
 		SwingUtilities.invokeLater(() -> {
 			panel.removeAllClocks();
-			for (TZClocksItem item : timezones) {
-				panel.addTimezonePanel(item);
+			for (TZClocksCategory category : categories) {
+				panel.addCategoryPanel(category);
+				if (!category.isCollapsed()) {
+					for (UUID clockId : category.getClocks()) {
+						Optional<TZClocksItem> clockItem = timezones.stream()
+								.filter(item -> item.getUuid().equals(clockId))
+								.findFirst();
+						clockItem.ifPresent(panel::addTimezonePanel);
+					}
+				}
 			}
 		});
 	}
@@ -143,6 +166,45 @@ public class TZClocksPlugin extends Plugin {
 			return DateTimeFormatter.ofPattern("HH:mm:ss");
 		} else {
 			return DateTimeFormatter.ofPattern("hh:mm:ss a");
+		}
+	}
+
+	// Category Management Methods
+
+	public void addCategory(String categoryName) {
+		categories.add(new TZClocksCategory(categoryName));
+		SwingUtilities.invokeLater(() -> panel.addCategoryPanel(categories.get(categories.size() - 1)));
+		dataManager.saveData();
+	}
+
+	public void renameCategory(TZClocksCategory category, String newName) {
+		category.setName(newName);
+		SwingUtilities.invokeLater(() -> panel.renameCategoryPanel(category));
+		dataManager.saveData();
+	}
+
+	public void deleteCategory(TZClocksCategory category, boolean deleteClocks) {
+		if (deleteClocks) {
+			// Remove clocks from the plugin's list
+			category.getClocks().forEach(clockId -> timezones.removeIf(item -> item.getUuid().equals(clockId)));
+		} else {
+			// Move clocks to "Uncategorized" category
+			TZClocksCategory uncategorized = categories.get(0);
+			category.getClocks().forEach(uncategorized::addClock);
+		}
+
+		categories.remove(category);
+		SwingUtilities.invokeLater(() -> panel.removeCategoryPanel(category));
+		dataManager.saveData();
+	}
+
+	// Helper method to remove a clock from its current category
+	private void removeFromCategory(UUID clockId) {
+		for (TZClocksCategory category : categories) {
+			if (category.getClocks().contains(clockId)) {
+				category.removeClock(clockId);
+				break;
+			}
 		}
 	}
 }
