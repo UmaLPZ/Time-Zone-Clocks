@@ -1,8 +1,8 @@
 package com.tzclocks.tzdata;
 
-import com.tzclocks.TZClocksPlugin;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.tzclocks.TZClocksPlugin;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -10,9 +10,6 @@ import net.runelite.client.config.ConfigManager;
 
 import javax.inject.Inject;
 import java.lang.reflect.Type;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -20,37 +17,30 @@ import java.util.UUID;
 @Slf4j
 public class TZClocksDataManager {
     private static final String CONFIG_KEY_TIMEZONES = "timezonekey";
-    private static final String CONFIG_KEY_TABS = "tabsKey"; // Updated key for tabs
+    private static final String CONFIG_KEY_TABS = "tabsKey";
     private static final String CONFIG_GROUP = "timezonesgroup";
     private static final String LOAD_TIMEZONE_ERROR = "Exception occurred while loading timezones";
     private static final String EMPTY_ARRAY = "[]";
+
     private final TZClocksPlugin plugin;
     private final Client client;
     private final ConfigManager configManager;
     private final Gson gson;
 
     private List<TZClocksItem> timezoneItems = new ArrayList<>();
-    private List<TZClocksTab> tabs = new ArrayList<>(); // List to store tabs
+    private List<TZClocksTabData> tabs = new ArrayList<>();
     private final Type timezoneItemsType = new TypeToken<ArrayList<TZClocksItem>>() {}.getType();
-    private final Type tabsType = new TypeToken<ArrayList<TZClocksTab>>() {}.getType(); // Type for tabs
+    private final Type tabsType = new TypeToken<ArrayList<TZClocksTabData>>() {}.getType();
+
     @Inject
-    public TZClocksDataManager(TZClocksPlugin plugin, Client client, ConfigManager configManager, Gson gson) { //saves time zones between client sessions
+    public TZClocksDataManager(TZClocksPlugin plugin, Client client, ConfigManager configManager, Gson gson) {
         this.plugin = plugin;
         this.client = client;
         this.configManager = configManager;
         this.gson = gson;
     }
 
-
-// was used when adding time zone but did not always save to data manager; leaving here just in case
-//    public void saveTimezoneToConfig(String timezoneId) {
-//        if (!timezoneIds.contains(timezoneId)) {
-//            timezoneIds.add(timezoneId);
-//            saveData();
-//        }
-//    }
-
-    public boolean loadData() { //loads data after starting client. works
+    public boolean loadData() {
         if (client.getGameState().getState() < GameState.LOGIN_SCREEN.getState()) {
             return false;
         }
@@ -58,27 +48,20 @@ public class TZClocksDataManager {
         timezoneItems.clear();
         tabs.clear();
 
-        // Load Timezones
         String timezonesJson = configManager.getConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES);
         if (timezonesJson == null || timezonesJson.equals(EMPTY_ARRAY)) {
             plugin.setTimezones(new ArrayList<>());
         } else {
             try {
-                // Check if the loaded data contains UUIDs (new format)
                 if (timezonesJson.contains("\"uuid\":")) {
-                    // Load as new format
                     timezoneItems = gson.fromJson(timezonesJson, timezoneItemsType);
                 } else {
-                    // Load as old format (List<String>)
                     Type oldItemsType = new TypeToken<ArrayList<String>>() {}.getType();
                     List<String> oldTimezoneIds = gson.fromJson(timezonesJson, oldItemsType);
-
-                    // Convert old format to new format
                     for (String timezoneId : oldTimezoneIds) {
-                        timezoneItems.add(convertIdToItem(UUID.randomUUID(), timezoneId, null));
+                        timezoneItems.add(new TZClocksItem(UUID.randomUUID(), timezoneId, null, null));
                     }
                 }
-
                 convertItems();
             } catch (Exception e) {
                 log.error(LOAD_TIMEZONE_ERROR, e);
@@ -86,55 +69,53 @@ public class TZClocksDataManager {
             }
         }
 
-        // Load Tabs
-        String tabsJson = configManager.getConfiguration(CONFIG_GROUP, CONFIG_KEY_TABS); // Updated key
+        String tabsJson = configManager.getConfiguration(CONFIG_GROUP, CONFIG_KEY_TABS);
         if (tabsJson != null && !tabsJson.equals(EMPTY_ARRAY)) {
             try {
-                tabs = gson.fromJson(tabsJson, tabsType); // Use tabsType
+                tabs = gson.fromJson(tabsJson, tabsType);
+                convertTabs();
             } catch (Exception e) {
                 log.error("Error loading tabs:", e);
             }
         }
 
-        plugin.setTabs(tabs); // Use the updated tabs list
-        plugin.updateTimezoneData();
         return true;
     }
 
-    public void saveData() { //saves data to config
-        // Save Timezones
-        List<TZClocksItem> tempTimezoneItems = new ArrayList<>();
-
-        for (TZClocksItem item : plugin.getTimezones()) {
-            tempTimezoneItems.add(item);
-        }
-
+    public void saveData() {
+        List<TZClocksItem> tempTimezoneItems = new ArrayList<>(plugin.getTimezones());
         timezoneItems = tempTimezoneItems;
-
         final String timezonesJson = gson.toJson(timezoneItems);
         configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES, timezonesJson);
 
-        // Save Tabs
-        tabs = plugin.getTabs();
-        final String tabsJson = gson.toJson(tabs); // Serialize tabs
-        configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TABS, tabsJson); // Updated key
+        tabs.clear();
+        for (TZClocksTab tab : plugin.getTabs()) { // Use TZClocksTab
+            List<UUID> tabClockIds = new ArrayList<>();
+            for (TZClocksItem item : plugin.getTimezones()) {
+                if (tab.getClocks().contains(item.getUuid())) {
+                    tabClockIds.add(item.getUuid());
+                }
+            }
+            tabs.add(new TZClocksTabData(tab.getName(), tab.isCollapsed(), tabClockIds));
+        }
+        final String tabsJson = gson.toJson(tabs);
+        configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TABS, tabsJson);
     }
 
-    private void convertItems() { //converts time zones for loading
+    private void convertItems() {
         List<TZClocksItem> watchItems = new ArrayList<>();
-
         for (TZClocksItem timezoneItem : timezoneItems) {
-            watchItems.add(convertIdToItem(timezoneItem.getUuid(), timezoneItem.getName(), timezoneItem.getCustomName()));
+            watchItems.add(new TZClocksItem(timezoneItem.getUuid(), timezoneItem.getName(), timezoneItem.getCurrentTime(), timezoneItem.getCustomName()));
         }
-
         plugin.setTimezones(watchItems);
     }
 
-    private TZClocksItem convertIdToItem(UUID uuid, String timezoneId, String customName) { //also converts time zones for loading
-        ZoneId zoneId = ZoneId.of(timezoneId);
-        ZonedDateTime now = ZonedDateTime.now(zoneId);
-        DateTimeFormatter formatter = plugin.getFormatter();
-        String currentTime = now.format(formatter);
-        return new TZClocksItem(uuid, timezoneId, currentTime, customName);
+    private void convertTabs() {
+        List<TZClocksTab> watchTabs = new ArrayList<>();
+        for (TZClocksTabData tabData : tabs) {
+            List<UUID> clockIds = tabData.getClocks();
+            watchTabs.add(new TZClocksTab(tabData.getName(), tabData.isCollapsed(), clockIds));
+        }
+        plugin.setTabs(watchTabs);
     }
 }

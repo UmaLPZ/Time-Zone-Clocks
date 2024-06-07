@@ -1,44 +1,45 @@
 package com.tzclocks.tzdata;
 
-import java.util.ArrayList;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 import java.util.UUID;
 
+@AllArgsConstructor
 public class TZClocksTab {
+    @Getter
+    @Setter
     private String name;
-    private List<UUID> clocks;
-    private boolean isCollapsed; // Change field name to isCollapsed
 
-    public TZClocksTab(String name) {
+    @Getter
+    @Setter
+    private boolean isCollapsed;
+
+    @Getter
+    private final List<UUID> clocks;
+
+    public TZClocksTab(String name, List<UUID> clocks) {
         this.name = name;
-        this.clocks = new ArrayList<>();
-        this.isCollapsed = true; // Tabs are collapsed by default
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<UUID> getClocks() {
-        return clocks;
+        this.isCollapsed = true; // Collapsed by default
+        this.clocks = clocks;
     }
 
     public void addClock(UUID clockId) {
-        clocks.add(clockId);
+        this.clocks.add(clockId);
     }
 
     public void removeClock(UUID clockId) {
-        clocks.remove(clockId);
+        this.clocks.remove(clockId);
     }
 
-    public boolean isCollapsed() {
-        return isCollapsed;
-    }
-    public void setCollapsed(boolean collapsed) {
-        this.isCollapsed = collapsed;
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof TZClocksTab)) {
+            return false;
+        }
+        final TZClocksTab tab = (TZClocksTab) obj;
+        return tab.getName().equals(this.name);
     }
 }

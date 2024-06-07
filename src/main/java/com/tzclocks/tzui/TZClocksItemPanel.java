@@ -12,8 +12,8 @@ public class TZClocksItemPanel extends JPanel {
 
     private final TZClocksItem item;
     private final JLabel currentTimeLabel;
-    private final JLabel timezoneNameLabel; // Label for displaying the timezone name
-    private final JLabel customNameLabel; // Label for displaying the custom name
+    private final JLabel timezoneNameLabel;
+    private final JLabel customNameLabel;
 
     TZClocksItemPanel(TZClocksPlugin plugin, TZClocksItem item) {
         this.item = item;
@@ -53,10 +53,10 @@ public class TZClocksItemPanel extends JPanel {
     private void updateCustomName() {
         if (item.getCustomName() != null) {
             customNameLabel.setText(item.getCustomName());
-            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0)); // Add spacing above timezone name
+            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
         } else {
-            customNameLabel.setText(""); // Blank by default
-            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0)); // Remove spacing
+            customNameLabel.setText("");
+            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
         }
     }
 
@@ -68,5 +68,9 @@ public class TZClocksItemPanel extends JPanel {
 
     public void updateTime() {
         currentTimeLabel.setText(item.getCurrentTime());
+    }
+
+    public TZClocksItem getItem() {
+        return item;
     }
 }

@@ -12,7 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
-import static com.tzclocks.tzutilities.TZConstants.DELETE_ICON_PATH;
+import static com.tzclocks.tzutilities.TZConstants.*;
 
 public class TZClocksTabItemPanel extends JPanel {
     private static final String DELETE_TITLE = "Warning";
@@ -22,8 +22,8 @@ public class TZClocksTabItemPanel extends JPanel {
 
     private final TZClocksItem item;
     private final JLabel currentTimeLabel;
-    private final JLabel timezoneNameLabel; // Label for displaying the timezone name
-    private final JLabel customNameLabel; // Label for displaying the custom name
+    private final JLabel timezoneNameLabel;
+    private final JLabel customNameLabel;
     private final TZClocksPlugin plugin;
 
     static {

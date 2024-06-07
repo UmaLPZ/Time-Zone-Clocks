@@ -15,7 +15,7 @@ public class TZClocksSelectionPanel {
     private final JList<TZClocksItem> clockList;
     private ActionListener okEvent;
     private final JDialog dialog;
-    private final TZClocksPluginPanel pluginPanel; // Add pluginPanel reference
+    private final TZClocksPluginPanel pluginPanel;
 
     private static final String OK = "Ok";
     private static final String CANCEL = "Cancel";
@@ -57,7 +57,7 @@ public class TZClocksSelectionPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(clockList);
-        scrollPane.setBorder(new EmptyBorder(0, 5, 0, 5));
+        scrollPane.setBorder(new EmptyBorder(0, 5, 0, 5)); // Add some padding around the list
 
         centerPanel.add(topPanel, BorderLayout.NORTH);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
@@ -73,7 +73,7 @@ public class TZClocksSelectionPanel {
 
         optionPane.setOptions(new Object[]{okButton, cancelButton});
 
-        dialog = optionPane.createDialog(parent, TITLE); // Use parent parameter
+        dialog = optionPane.createDialog(parent, TITLE); // Use parent here
         dialog.setTitle(TITLE);
     }
 
@@ -91,7 +91,7 @@ public class TZClocksSelectionPanel {
         }
 
         // Refresh the tab display
-        TZClocksPlugin plugin = pluginPanel.getPlugin(); // Access getPlugin()
+        TZClocksPlugin plugin = pluginPanel.getPlugin();
         SwingUtilities.invokeLater(() -> plugin.getPanel().refreshAllTabs());
 
         dialog.setVisible(false);
