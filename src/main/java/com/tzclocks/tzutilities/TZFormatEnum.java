@@ -1,4 +1,4 @@
-package com.tzclocks.tzdata;
+package com.tzclocks.tzutilities;
 
 import lombok.AllArgsConstructor;
 

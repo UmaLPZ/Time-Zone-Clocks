@@ -4,9 +4,9 @@ import com.tzclocks.tzconfig.TZClocksConfig;
 import com.tzclocks.tzdata.TZClocksDataManager;
 import com.tzclocks.tzdata.TZClocksItem;
 import com.tzclocks.tzdata.TZClocksTab;
-import com.tzclocks.tzdata.TZFormatEnum;
+import com.tzclocks.tzutilities.TZFormatEnum;
 import com.tzclocks.tzui.TZClocksPluginPanel;
-import com.tzclocks.tzui.TZClocksTabPanel; // Import TZClocksTabPanel
+import com.tzclocks.tzui.TZClocksTabPanel;
 import com.google.inject.Provides;
 import lombok.Getter;
 import lombok.Setter;
@@ -129,29 +129,12 @@ public class TZClocksPlugin extends Plugin {
 	public void refreshTimezonePanels() { //refreshes panel on start up
 		SwingUtilities.invokeLater(() -> {
 			panel.removeAllClocks();
-
-			// Add all clocks to the main panel
 			for (TZClocksItem item : timezones) {
 				panel.addTimezonePanel(item);
 			}
-
 			// Add tab panels after adding clocks
 			for (TZClocksTab tab : tabs) {
 				panel.addTabPanel(tab);
-
-				// Add the clocks belonging to each tab
-				for (UUID clockId : tab.getClocks()) {
-					// Find the clock item
-					TZClocksItem clockItem = timezones.stream()
-							.filter(item -> item.getUuid().equals(clockId))
-							.findFirst()
-							.orElse(null); // Handle the case where the clock might not be found
-
-					// Add the clock panel if found
-					if (clockItem != null) {
-						panel.addTimezonePanel(clockItem);
-					}
-				}
 			}
 		});
 	}
@@ -182,17 +165,27 @@ public class TZClocksPlugin extends Plugin {
 		dataManager.saveData();
 	}
 
+	public void editTab(TZClocksTab tab) {
+		String newName = JOptionPane.showInputDialog(panel, "Enter new name:", tab.getName());
+		if (newName != null && !newName.trim().isEmpty()) {
+			renameTab(tab, newName);
+		}
+	}
+
 	public void renameTab(TZClocksTab tab, String newName) {
 		tab.setName(newName);
+		// Refresh the tab panel to reflect the name change
+		SwingUtilities.invokeLater(() -> {
+			TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
+			if (tabPanel != null) {
+				tabPanel.updateTabName(newName);
+			}
+		});
 		dataManager.saveData();
 	}
 
-	public void deleteTab(TZClocksTab tab, boolean deleteClocks) {
-		if (deleteClocks) {
-			// Remove clocks from the plugin's list
-			tab.getClocks().forEach(clockId -> timezones.removeIf(item -> item.getUuid().equals(clockId)));
-		}
 
+	public void removeTab(TZClocksTab tab) {
 		tabs.remove(tab);
 		SwingUtilities.invokeLater(() -> panel.removeTabPanel(tab));
 		dataManager.saveData();
@@ -206,16 +199,48 @@ public class TZClocksPlugin extends Plugin {
 
 				// Refresh the tab panel to reflect the removal
 				SwingUtilities.invokeLater(() -> {
-					TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab); // Access getTabPanelsMap()
+					TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
 					if (tabPanel != null) {
-						tabPanel.toggleTabCollapse(); // Call toggleTabCollapse on the tabPanel
-						tabPanel.toggleTabCollapse();
+						tabPanel.toggleTabCollapse(); // This will refresh the clocks displayed in the tab
 					}
 				});
 
 				break; // No need to continue searching
 			}
 		}
+	}
+
+	public void switchTabExpandCollapse(TZClocksTab tab) {
+		tab.setCollapsed(!tab.isCollapsed());
+
+		SwingUtilities.invokeLater(() -> {
+			TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
+			if (tabPanel != null) {
+				tabPanel.toggleTabCollapse();
+
+				// After collapsing/expanding, refresh the main panel
+				panel.removeAllClocks(); // Remove all clocks from the main panel
+
+				// Re-add clocks based on their tab state
+				for (TZClocksItem item : timezones) {
+					TZClocksTabPanel parentTab = getTabForClock(item);
+					if (parentTab == null || !parentTab.getTab().isCollapsed()) {
+						panel.addTimezonePanel(item);
+					}
+				}
+			}
+		});
+		dataManager.saveData();
+	}
+
+	// Helper method to find the tab containing a clock
+	private TZClocksTabPanel getTabForClock(TZClocksItem clock) {
+		for (TZClocksTab tab : tabs) {
+			if (tab.getClocks().contains(clock.getUuid())) {
+				return panel.getTabPanelsMap().get(tab);
+			}
+		}
+		return null;
 	}
 
 	public void setTabs(List<TZClocksTab> tabs) {

@@ -7,12 +7,12 @@ import java.util.UUID;
 public class TZClocksTab {
     private String name;
     private List<UUID> clocks;
-    private boolean collapsed;
+    private boolean isCollapsed; // Change field name to isCollapsed
 
     public TZClocksTab(String name) {
         this.name = name;
         this.clocks = new ArrayList<>();
-        this.collapsed = true; // Tabs are collapsed by default
+        this.isCollapsed = true; // Tabs are collapsed by default
     }
 
     public String getName() {
@@ -36,10 +36,9 @@ public class TZClocksTab {
     }
 
     public boolean isCollapsed() {
-        return collapsed;
+        return isCollapsed;
     }
-
     public void setCollapsed(boolean collapsed) {
-        this.collapsed = collapsed;
+        this.isCollapsed = collapsed;
     }
 }

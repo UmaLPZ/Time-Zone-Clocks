@@ -3,7 +3,7 @@ package com.tzclocks.tzconfig;
 import java.util.List;
 
 import com.tzclocks.TZClocksPlugin;
-import com.tzclocks.tzdata.TZFormatEnum;
+import com.tzclocks.tzutilities.TZFormatEnum;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
