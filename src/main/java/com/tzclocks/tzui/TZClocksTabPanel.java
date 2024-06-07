@@ -1,10 +1,12 @@
 package com.tzclocks.tzui;
 
+import ch.qos.logback.classic.Logger;
 import com.tzclocks.TZClocksPlugin;
 import com.tzclocks.tzdata.TZClocksItem;
 import com.tzclocks.tzdata.TZClocksTab;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.ImageUtil;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -71,15 +73,12 @@ public class TZClocksTabPanel extends JPanel {
         this.pluginPanel = panel;
         this.tab = tab;
 
-        // Top Panel
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setOpaque(false);
 
-        // Collapse and Names
         JPanel leftActions = new JPanel(new BorderLayout());
         leftActions.setOpaque(false);
 
-        // Tab Name
         JLabel tabName = new JLabel();
         tabName.setForeground(Color.WHITE);
         tabName.setBorder(new EmptyBorder(0, 5, 0, 0));
@@ -87,11 +86,9 @@ public class TZClocksTabPanel extends JPanel {
         tabName.setText(tab.getName());
         tabName.setToolTipText((tab.getName()));
 
-        // Collapse
         JLabel collapseButton = new JLabel();
         collapseButton.setOpaque(false);
 
-        // Initialize itemsPanel here
         itemsPanel = new JPanel();
         itemsPanel.setLayout(new GridBagLayout());
         itemsPanel.setBorder(new EmptyBorder(5, 5, 0, 5));
@@ -147,12 +144,10 @@ public class TZClocksTabPanel extends JPanel {
 
             topPanel.add(leftActions, BorderLayout.WEST);
 
-            // Actions Panel
             JPanel rightActions = new JPanel(new BorderLayout());
             rightActions.setBorder(new EmptyBorder(0, 0, 0, 5));
             rightActions.setOpaque(false);
 
-            // Delete Button
             JLabel deleteBtn = new JLabel(DELETE_TAB_ICON);
             deleteBtn.setVerticalAlignment(SwingConstants.CENTER);
             deleteBtn.setBorder(new EmptyBorder(0, 0, 0, 5));
@@ -178,7 +173,6 @@ public class TZClocksTabPanel extends JPanel {
 
             rightActions.add(deleteBtn, BorderLayout.LINE_START);
 
-            // Edit Button
             JLabel edit = new JLabel(EDIT_ICON);
             edit.setVerticalAlignment(SwingConstants.CENTER);
             edit.setBorder(new EmptyBorder(0, 0, 0, 5));
@@ -224,14 +218,13 @@ public class TZClocksTabPanel extends JPanel {
 
             topPanel.add(rightActions, BorderLayout.EAST);
 
-            // Tab Items
             constraints.fill = GridBagConstraints.HORIZONTAL;
             constraints.gridwidth = 1;
             constraints.weightx = 1;
             constraints.gridx = 0;
             constraints.gridy = 1;
 
-            index.set(0); // Reset index when expanding the tab
+            index.set(0);
             for (UUID clockId : tab.getClocks()) {
                 Optional<TZClocksItem> clock = plugin.getTimezones().stream()
                         .filter(c -> c.getUuid().equals(clockId))
@@ -268,21 +261,22 @@ public class TZClocksTabPanel extends JPanel {
 
                 // Remove clock from main panel and add to tab
                 pluginPanel.removeTimezonePanel(clock);
-                addClockToTab(clock);
+                addClockToTab(clock); // Pass the clock (TZClocksItem) to addClockToTab
             }
             plugin.dataManager.saveData();
-            pluginPanel.refreshAllTabs();
+            pluginPanel.updatePanel();
         });
         selectionPanel.show();
     }
 
-    // Method to add a clock panel to this tab
-    public void addClockToTab(TZClocksItem clock) { // Now public
+    private void addClockToTab(TZClocksItem clock) {
         TZClocksTabItemPanel itemPanel = new TZClocksTabItemPanel(plugin, clock);
-        if (index.getAndIncrement() > 0) {
+        if (index.get() > 0) {
             itemsPanel.add(createMarginWrapper(itemPanel), constraints);
+            index.getAndIncrement();
         } else {
             itemsPanel.add(itemPanel, constraints);
+            index.incrementAndGet();
         }
         constraints.gridy++;
         itemsPanel.revalidate();

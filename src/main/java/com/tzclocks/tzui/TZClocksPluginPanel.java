@@ -20,9 +20,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class TZClocksPluginPanel extends PluginPanel {
     private final TZClocksPlugin plugin;
@@ -31,7 +28,6 @@ public class TZClocksPluginPanel extends PluginPanel {
     private final JComboBox<TZRegionEnum> regionDropdown = new JComboBox<>();
     private final JComboBox<String> timezoneDropdown = new JComboBox<>();
     private final JPanel clockListPanel;
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final Map<TZClocksItem, TZClocksItemPanel> timezonePanelsMap = new HashMap<>();
     private final Map<TZClocksTab, TZClocksTabPanel> tabPanelsMap = new HashMap<>();
     private final GridBagConstraints constraints = new GridBagConstraints();
@@ -67,8 +63,6 @@ public class TZClocksPluginPanel extends PluginPanel {
         constraints.weightx = 1;
         constraints.gridx = 0;
         constraints.gridy = 0;
-
-        scheduler.scheduleAtFixedRate(this::refreshTimeDisplays, 0, 1, TimeUnit.SECONDS);
         updateTimeZoneDropdown();
     }
 
@@ -169,32 +163,11 @@ public class TZClocksPluginPanel extends PluginPanel {
         }
     }
 
-    public void refreshTimeDisplays() {
-        for (TZClocksItem item : plugin.getTimezones()) {
-            TZClocksItemPanel panel = timezonePanelsMap.get(item);
-            if (panel != null) {
-                panel.updateTime();
-            }
-        }
-    }
-
     public void removeAllClocks() {
         clockListPanel.removeAll();
         timezonePanelsMap.clear();
         revalidate();
         repaint();
-    }
-
-    // Method to refresh all tabs
-    public void refreshAllTabs() {
-        for (TZClocksTabPanel tabPanel : tabPanelsMap.values()) {
-            if (!tabPanel.getTab().isCollapsed()) {
-                tabPanel.toggleTabCollapse();
-                tabPanel.toggleTabCollapse();
-            }
-        }
-        clockListPanel.revalidate();
-        clockListPanel.repaint();
     }
 
     public void addTabPanel(TZClocksTab tab) {
@@ -232,18 +205,16 @@ public class TZClocksPluginPanel extends PluginPanel {
     public void updatePanel() {
         clockListPanel.removeAll();
 
-        constraints.gridy = 0; // Reset gridy when updating
+        constraints.gridy = 0;
 
-        // Add tabs first
         for (TZClocksTab tab : plugin.getTabs()) {
             addTabPanel(tab);
         }
 
-        // Then add individual clocks
         for (TZClocksItem clock : plugin.getTimezones()) {
             boolean isInTab = plugin.getTabs().stream()
                     .anyMatch(tab -> tab.getClocks().contains(clock.getUuid()));
-            if (!isInTab) { // Only add clocks that aren't in any tab
+            if (!isInTab) {
                 addTimezonePanel(clock);
             }
         }
@@ -251,12 +222,11 @@ public class TZClocksPluginPanel extends PluginPanel {
         clockListPanel.repaint();
     }
 
-
     public TZClocksPlugin getPlugin() {
         return plugin;
     }
 
-    public List<TZClocksItem> getAvailableClocks() {
+    public List<TZClocksItem> getAvailableClocks() { // Method is in TZClocksPluginPanel.java
         List<TZClocksItem> availableClocks = new ArrayList<>(plugin.getTimezones());
         for (TZClocksTab t : plugin.getTabs()) {
             availableClocks.removeIf(clock -> t.getClocks().contains(clock.getUuid()));

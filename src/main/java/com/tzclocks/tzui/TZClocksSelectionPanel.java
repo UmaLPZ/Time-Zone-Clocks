@@ -91,8 +91,7 @@ public class TZClocksSelectionPanel {
         }
 
         // Refresh the tab display
-        TZClocksPlugin plugin = pluginPanel.getPlugin();
-        SwingUtilities.invokeLater(() -> plugin.getPanel().refreshAllTabs());
+        SwingUtilities.invokeLater(() -> pluginPanel.updatePanel()); // Call updatePanel()
 
         dialog.setVisible(false);
     }

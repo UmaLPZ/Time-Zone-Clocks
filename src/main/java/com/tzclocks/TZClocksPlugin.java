@@ -5,8 +5,11 @@ import com.tzclocks.tzconfig.TZClocksConfig;
 import com.tzclocks.tzdata.TZClocksDataManager;
 import com.tzclocks.tzdata.TZClocksItem;
 import com.tzclocks.tzdata.TZClocksTab;
+import com.tzclocks.tzui.TZClocksTabPanel;
 import com.tzclocks.tzutilities.TZFormatEnum;
+import com.tzclocks.tzui.TZClocksItemPanel;
 import com.tzclocks.tzui.TZClocksPluginPanel;
+import com.tzclocks.tzui.TZClocksTabItemPanel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,7 @@ import net.runelite.client.util.ImageUtil;
 
 import javax.inject.Inject;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -80,7 +84,7 @@ public class TZClocksPlugin extends Plugin {
 				.build();
 		clientToolbar.addNavigation(navButton);
 		dataManager.loadData();
-		SwingUtilities.invokeLater(() -> panel.updatePanel()); // Similar to Market Watcher
+		SwingUtilities.invokeLater(() -> panel.updatePanel());
 
 		scheduler.scheduleAtFixedRate(this::updateTimezoneData, 0, 1, TimeUnit.SECONDS);
 	}
@@ -156,15 +160,49 @@ public class TZClocksPlugin extends Plugin {
 
 	public void switchTabExpandCollapse(TZClocksTab tab) {
 		tab.setCollapsed(!tab.isCollapsed());
+
+		SwingUtilities.invokeLater(() -> {
+			TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
+			if (tabPanel != null) {
+				tabPanel.toggleTabCollapse();
+
+				// After collapsing/expanding, refresh the main panel
+				panel.removeAllClocks();
+
+				// Re-add clocks based on their tab state
+				for (TZClocksItem item : timezones) {
+					TZClocksTabPanel parentTab = getTabForClock(item);
+					if (parentTab == null || !parentTab.getTab().isCollapsed()) {
+						panel.addTimezonePanel(item);
+					}
+				}
+			}
+		});
 		dataManager.saveData();
-		SwingUtilities.invokeLater(() -> panel.updatePanel());
 	}
 
+	private TZClocksTabPanel getTabForClock(TZClocksItem clock) {
+		for (TZClocksTab tab : tabs) {
+			if (tab.getClocks().contains(clock.getUuid())) {
+				return panel.getTabPanelsMap().get(tab);
+			}
+		}
+		return null;
+	}
 
 	public void removeClockFromTab(TZClocksItem clock) {
 		for (TZClocksTab tab : tabs) {
 			if (tab.getClocks().contains(clock.getUuid())) {
 				tab.removeClock(clock.getUuid());
+
+				SwingUtilities.invokeLater(() -> {
+					TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
+					if (tabPanel != null) {
+						tabPanel.toggleTabCollapse();
+						tabPanel.toggleTabCollapse();
+					}
+				});
+
 				break;
 			}
 		}
@@ -176,10 +214,43 @@ public class TZClocksPlugin extends Plugin {
 			ZoneId zoneId = ZoneId.of(item.getName());
 			ZonedDateTime now = ZonedDateTime.now(zoneId);
 			String currentTime = now.format(formatter);
-			item.setCurrentTime(currentTime);
+			item.setCurrentTime(currentTime); // Update the time in the data object
+
+			SwingUtilities.invokeLater(() -> {
+				// Update the corresponding clock panels
+				TZClocksItemPanel clockPanel = panel.getTimezonePanelsMap().get(item);
+				if (clockPanel != null) {
+					clockPanel.updateTime();
+				}
+
+				// Iterate through tabs to find and update the clock in a tab, if it exists
+				for (TZClocksTab tab : tabs) {
+					if (tab.getClocks().contains(item.getUuid())) {
+						TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
+						if (tabPanel != null && !tab.isCollapsed()) {
+							Component[] tabPanelComponents = ((Container) tabPanel.getComponents()[1]).getComponents();
+							for (Component component : tabPanelComponents) {
+								if (component instanceof JPanel) {
+									JPanel containerPanel = (JPanel) component;
+									Component clockItemPanel = containerPanel.getComponent(0);
+									if (clockItemPanel instanceof TZClocksTabItemPanel) {
+										TZClocksTabItemPanel tabItemPanel = (TZClocksTabItemPanel) clockItemPanel;
+										if (tabItemPanel.getItem() == item) {
+											log.info("Updating clock in tab: " + item.getName() + " (Tab: " + tab.getName() + ")");
+											tabItemPanel.updateTime();
+											break;
+										}
+									}
+								}
+							}
+						}
+						break;
+					}
+				}
+			});
 		}
-		SwingUtilities.invokeLater(() -> panel.refreshTimeDisplays());
 	}
+
 
 	public DateTimeFormatter getFormatter() {
 		if (config.getTZFormatMode() == TZFormatEnum.TWENTY_FOUR_HOUR) {

@@ -12,7 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
-import static com.tzclocks.tzutilities.TZConstants.*;
+import static com.tzclocks.tzutilities.TZConstants.DELETE_ICON_PATH;
 
 public class TZClocksTabItemPanel extends JPanel {
     private static final String DELETE_TITLE = "Warning";
@@ -65,6 +65,7 @@ public class TZClocksTabItemPanel extends JPanel {
 
         updateCustomName();
 
+        // Add delete button and action panel
         JPanel actionPanel = new JPanel(new BorderLayout());
         actionPanel.setBackground(new Color(0, 0, 0, 0));
         actionPanel.setOpaque(false);
@@ -119,5 +120,9 @@ public class TZClocksTabItemPanel extends JPanel {
 
     public void updateTime() {
         currentTimeLabel.setText(item.getCurrentTime());
+    }
+
+    public TZClocksItem getItem() { // Added getItem method
+        return item;
     }
 }
