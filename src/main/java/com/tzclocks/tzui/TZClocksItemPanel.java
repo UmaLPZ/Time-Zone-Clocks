@@ -121,16 +121,16 @@ public class TZClocksItemPanel extends JPanel {
         actionPanel.add(deleteButton);
 
         add(timezoneDetailsPanel, BorderLayout.WEST);
-        add(actionPanel, BorderLayout.EAST); // Re-add the actionPanel
+        add(actionPanel, BorderLayout.EAST);
     }
 
     private void updateCustomName() {
         if (item.getCustomName() != null) {
             customNameLabel.setText(item.getCustomName());
-            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0)); // Add spacing above timezone name
+            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
         } else {
-            customNameLabel.setText(""); // Blank by default
-            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0)); // Remove spacing
+            customNameLabel.setText("");
+            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
         }
     }
 
@@ -139,7 +139,7 @@ public class TZClocksItemPanel extends JPanel {
         if (newName != null) {
             item.setCustomName(newName);
             updateCustomName();
-            plugin.dataManager.saveData(); // Save the changes
+            plugin.dataManager.saveData();
         }
     }
 
@@ -157,7 +157,7 @@ public class TZClocksItemPanel extends JPanel {
 
     public void updateTime() {
         currentTimeLabel.setText(item.getCurrentTime());
-    } //updates panel with new time zones
+    }
 
     public TZClocksItem getItem() {
         return item;

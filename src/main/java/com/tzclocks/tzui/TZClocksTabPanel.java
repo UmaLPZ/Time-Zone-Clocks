@@ -1,12 +1,10 @@
 package com.tzclocks.tzui;
 
-import ch.qos.logback.classic.Logger;
 import com.tzclocks.TZClocksPlugin;
 import com.tzclocks.tzdata.TZClocksItem;
 import com.tzclocks.tzdata.TZClocksTab;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.ImageUtil;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,7 +12,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,6 +41,8 @@ public class TZClocksTabPanel extends JPanel {
     private final TZClocksPluginPanel pluginPanel;
     private final JPanel itemsPanel;
     private final GridBagConstraints constraints = new GridBagConstraints();
+    private final Map<TZClocksItem, TZClocksTabItemPanel> tabItemPanelsMap = new HashMap<>(); // Map to store clock panels within the tab
+
 
     static {
         final BufferedImage addImage = ImageUtil.loadImageResource(TZClocksPlugin.class, ADD_ICON_PATH);
@@ -101,7 +103,7 @@ public class TZClocksTabPanel extends JPanel {
             collapseButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    plugin.switchTabExpandCollapse(tab);
+                    toggleTabCollapse();
                 }
 
                 @Override
@@ -125,7 +127,7 @@ public class TZClocksTabPanel extends JPanel {
             collapseButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    plugin.switchTabExpandCollapse(tab);
+                    toggleTabCollapse();
                 }
 
                 @Override
@@ -237,6 +239,9 @@ public class TZClocksTabPanel extends JPanel {
                         itemsPanel.add(itemPanel, constraints);
                     }
                     constraints.gridy++;
+
+                    // Add the clock panel to the map
+                    tabItemPanelsMap.put(c, itemPanel); // Add to the map here
                 });
             }
             add(topPanel, BorderLayout.NORTH);
@@ -259,9 +264,8 @@ public class TZClocksTabPanel extends JPanel {
             for (TZClocksItem clock : selectedClocks) {
                 tab.addClock(clock.getUuid());
 
-                // Remove clock from main panel and add to tab
                 pluginPanel.removeTimezonePanel(clock);
-                addClockToTab(clock); // Pass the clock (TZClocksItem) to addClockToTab
+                addClockToTab(clock);
             }
             plugin.dataManager.saveData();
             pluginPanel.updatePanel();
@@ -271,16 +275,17 @@ public class TZClocksTabPanel extends JPanel {
 
     private void addClockToTab(TZClocksItem clock) {
         TZClocksTabItemPanel itemPanel = new TZClocksTabItemPanel(plugin, clock);
-        if (index.get() > 0) {
+        if (index.getAndIncrement() > 0) {
             itemsPanel.add(createMarginWrapper(itemPanel), constraints);
-            index.getAndIncrement();
         } else {
             itemsPanel.add(itemPanel, constraints);
-            index.incrementAndGet();
         }
         constraints.gridy++;
         itemsPanel.revalidate();
         itemsPanel.repaint();
+
+        // Add the clock panel to the map
+        tabItemPanelsMap.put(clock, itemPanel);
     }
 
     private boolean deleteConfirm() {
@@ -318,8 +323,10 @@ public class TZClocksTabPanel extends JPanel {
         tab.setCollapsed(!tab.isCollapsed());
         if (tab.isCollapsed()) {
             itemsPanel.removeAll();
+            itemsPanel.setVisible(false);
         } else {
             constraints.gridy = 1;
+            index.set(0);
             for (UUID clockId : tab.getClocks()) {
                 Optional<TZClocksItem> clockItem = plugin.getTimezones().stream()
                         .filter(item -> item.getUuid().equals(clockId))
@@ -327,6 +334,7 @@ public class TZClocksTabPanel extends JPanel {
 
                 clockItem.ifPresent(this::addClockToTab);
             }
+            itemsPanel.setVisible(true);
         }
         updateCollapseIcon();
         itemsPanel.revalidate();
@@ -339,6 +347,10 @@ public class TZClocksTabPanel extends JPanel {
             JLabel collapseButton = (JLabel) headerComponents[0];
             collapseButton.setIcon(tab.isCollapsed() ? EXPAND_ICON : COLLAPSE_ICON);
         }
+    }
+
+    public Map<TZClocksItem, TZClocksTabItemPanel> getTabItemPanelsMap() { // Add this getter
+        return tabItemPanelsMap;
     }
 
     @Override

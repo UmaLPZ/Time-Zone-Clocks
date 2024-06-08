@@ -226,7 +226,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         return plugin;
     }
 
-    public List<TZClocksItem> getAvailableClocks() { // Method is in TZClocksPluginPanel.java
+    public List<TZClocksItem> getAvailableClocks() {
         List<TZClocksItem> availableClocks = new ArrayList<>(plugin.getTimezones());
         for (TZClocksTab t : plugin.getTabs()) {
             availableClocks.removeIf(clock -> t.getClocks().contains(clock.getUuid()));

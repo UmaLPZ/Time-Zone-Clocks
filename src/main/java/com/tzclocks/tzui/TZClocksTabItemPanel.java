@@ -98,10 +98,10 @@ public class TZClocksTabItemPanel extends JPanel {
     private void updateCustomName() {
         if (item.getCustomName() != null) {
             customNameLabel.setText(item.getCustomName());
-            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0)); // Add spacing above timezone name
+            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
         } else {
-            customNameLabel.setText(""); // Blank by default
-            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0)); // Remove spacing
+            customNameLabel.setText("");
+            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
         }
     }
 
@@ -122,7 +122,7 @@ public class TZClocksTabItemPanel extends JPanel {
         currentTimeLabel.setText(item.getCurrentTime());
     }
 
-    public TZClocksItem getItem() { // Added getItem method
+    public TZClocksItem getItem() {
         return item;
     }
 }
