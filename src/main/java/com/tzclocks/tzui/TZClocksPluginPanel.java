@@ -66,7 +66,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         updateTimeZoneDropdown();
     }
 
-    private JPanel createTopPanel() {
+    private JPanel createTopPanel() { //panel for the plugin. dropdowns and button
         JPanel topPanel = new JPanel(new GridLayout(4, 1, 0, 5));
         topPanel.setBorder(new EmptyBorder(0, 0, 10, 0));
 
@@ -119,7 +119,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         }
     }
 
-    private void updateTimeZoneDropdown() {
+    private void updateTimeZoneDropdown() { //self-explanatory. updates the time zone dropdown to match region
         TZRegionEnum selectedRegion = (TZRegionEnum) regionDropdown.getSelectedItem();
         List<ZoneId> zoneIds = getTimeZoneIdsForRegion(selectedRegion);
 
@@ -135,7 +135,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         }
     }
 
-    public void addTimezonePanel(TZClocksItem item) {
+    public void addTimezonePanel(TZClocksItem item) { //adds the time zone panel
         TZClocksItemPanel clockPanel = new TZClocksItemPanel(plugin, item);
         timezonePanelsMap.put(item, clockPanel);
 
@@ -150,7 +150,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         clockListPanel.repaint();
     }
 
-    public void removeTimezonePanel(TZClocksItem item) {
+    public void removeTimezonePanel(TZClocksItem item) { //removes time zone from panel
         TZClocksItemPanel panelToRemove = timezonePanelsMap.get(item);
         if (panelToRemove != null) {
             Component parent = panelToRemove.getParent();
@@ -163,7 +163,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         }
     }
 
-    public void removeAllClocks() {
+    public void removeAllClocks() { //removes clocks to prevent re-adding previously selected clocks. there might be an alternative
         clockListPanel.removeAll();
         timezonePanelsMap.clear();
         revalidate();
@@ -222,6 +222,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         clockListPanel.repaint();
     }
 
+
     public TZClocksPlugin getPlugin() {
         return plugin;
     }
@@ -234,7 +235,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         return availableClocks;
     }
 
-    private JPanel createMarginWrapper(JPanel panel) {
+    private JPanel createMarginWrapper(JPanel panel) { //create spacing between tabs and clocks
         JPanel marginWrapper = new JPanel(new BorderLayout());
         marginWrapper.setBorder(new EmptyBorder(5, 0, 0, 0));
         marginWrapper.add(panel, BorderLayout.NORTH);

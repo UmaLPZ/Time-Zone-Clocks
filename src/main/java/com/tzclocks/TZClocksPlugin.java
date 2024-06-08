@@ -5,11 +5,11 @@ import com.tzclocks.tzconfig.TZClocksConfig;
 import com.tzclocks.tzdata.TZClocksDataManager;
 import com.tzclocks.tzdata.TZClocksItem;
 import com.tzclocks.tzdata.TZClocksTab;
-import com.tzclocks.tzui.TZClocksItemPanel;
-import com.tzclocks.tzui.TZClocksTabItemPanel;
 import com.tzclocks.tzui.TZClocksTabPanel;
 import com.tzclocks.tzutilities.TZFormatEnum;
+import com.tzclocks.tzui.TZClocksItemPanel;
 import com.tzclocks.tzui.TZClocksPluginPanel;
+import com.tzclocks.tzui.TZClocksTabItemPanel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -153,15 +153,12 @@ public class TZClocksPlugin extends Plugin {
 	}
 
 	public void removeTab(TZClocksTab tab) {
-		// Remove clocks from the tab and add them back to the main list
 		for (UUID clockId : tab.getClocks()) {
 			TZClocksItem clock = timezones.stream()
 					.filter(item -> item.getUuid().equals(clockId))
 					.findFirst()
 					.orElse(null);
 			if (clock != null) {
-				// Since the clock is being removed from the tab,
-				// it should be visible in the main panel again.
 				panel.addTimezonePanel(clock);
 			}
 		}
@@ -177,11 +174,14 @@ public class TZClocksPlugin extends Plugin {
 		SwingUtilities.invokeLater(() -> panel.updatePanel());
 	}
 
-
 	public void removeClockFromTab(TZClocksItem clock) {
 		for (TZClocksTab tab : tabs) {
 			if (tab.getClocks().contains(clock.getUuid())) {
 				tab.removeClock(clock.getUuid());
+
+				SwingUtilities.invokeLater(() -> {
+					panel.updatePanel();
+				});
 				break;
 			}
 		}
@@ -201,12 +201,11 @@ public class TZClocksPlugin extends Plugin {
 					clockPanel.updateTime();
 				}
 
-				// Update clocks within tabs using the tabItemPanelsMap
 				for (TZClocksTab tab : tabs) {
-					if (tab.getClocks().contains(item.getUuid())) {
+					if (tab.getClocks().contains(item.getUuid()) && !tab.isCollapsed()) {
 						TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
-						if (tabPanel != null && !tab.isCollapsed()) {
-							TZClocksTabItemPanel tabItemPanel = tabPanel.getTabItemPanelsMap().get(item); // Access from the map
+						if (tabPanel != null) {
+							TZClocksTabItemPanel tabItemPanel = tabPanel.getTabItemPanelsMap().get(item);
 							if (tabItemPanel != null) {
 								tabItemPanel.updateTime();
 							}
@@ -218,12 +217,29 @@ public class TZClocksPlugin extends Plugin {
 		}
 	}
 
-
 	public DateTimeFormatter getFormatter() {
 		if (config.getTZFormatMode() == TZFormatEnum.TWENTY_FOUR_HOUR) {
 			return DateTimeFormatter.ofPattern("HH:mm:ss");
 		} else {
 			return DateTimeFormatter.ofPattern("hh:mm:ss a");
+		}
+	}
+
+	public void addClockToTab(TZClocksItem clock, TZClocksTab tab) {
+		TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
+		if (tabPanel != null) {
+			TZClocksTabItemPanel itemPanel = new TZClocksTabItemPanel(this, clock);
+			tabPanel.getTabItemPanelsMap().put(clock, itemPanel); // Add to the map
+
+			GridBagConstraints constraints = tabPanel.getConstraints(); // Get constraints from the tab panel
+			if (tabPanel.getIndex().getAndIncrement() > 0) {
+				tabPanel.getItemsPanel().add(tabPanel.createMarginWrapper(itemPanel), constraints);
+			} else {
+				tabPanel.getItemsPanel().add(itemPanel, constraints);
+			}
+			constraints.gridy++;
+			tabPanel.getItemsPanel().revalidate();
+			tabPanel.getItemsPanel().repaint();
 		}
 	}
 }

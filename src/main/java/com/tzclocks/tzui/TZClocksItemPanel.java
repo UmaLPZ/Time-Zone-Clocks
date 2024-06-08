@@ -71,79 +71,20 @@ public class TZClocksItemPanel extends JPanel {
 
         updateCustomName();
 
-        // Action Panel (Delete, Edit)
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        actionPanel.setBackground(new Color(0, 0, 0, 0));
-        actionPanel.setOpaque(false);
-
-        // Edit button
-        JLabel editButton = new JLabel(EDIT_ICON);
-        editButton.setBorder(new EmptyBorder(0, 0, 0, 5));
-        editButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                editCustomName();
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                editButton.setIcon(EDIT_HOVER_ICON);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                editButton.setIcon(EDIT_ICON);
-            }
-        });
-        actionPanel.add(editButton);
-
-        // Delete button
-        JLabel deleteButton = new JLabel(DELETE_ICON);
-        deleteButton.setBorder(new EmptyBorder(0, 0, 0, 3));
-        deleteButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (deleteConfirm()) {
-                    plugin.removeTimezoneFromPanel(item);
-                }
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                deleteButton.setIcon(DELETE_HOVER_ICON);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                deleteButton.setIcon(DELETE_ICON);
-            }
-        });
-        actionPanel.add(deleteButton);
-
         add(timezoneDetailsPanel, BorderLayout.WEST);
-        add(actionPanel, BorderLayout.EAST);
     }
 
     private void updateCustomName() {
         if (item.getCustomName() != null) {
             customNameLabel.setText(item.getCustomName());
-            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
+            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0)); // Add spacing above timezone name
         } else {
-            customNameLabel.setText("");
-            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
+            customNameLabel.setText(""); // Blank by default
+            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0)); // Remove spacing
         }
     }
 
-    private void editCustomName() {
-        String newName = JOptionPane.showInputDialog(this, "Enter a custom name:", item.getCustomName());
-        if (newName != null) {
-            item.setCustomName(newName);
-            updateCustomName();
-            plugin.dataManager.saveData();
-        }
-    }
-
-    private boolean deleteConfirm() {
+    private boolean deleteConfirm() { //self-explanatory
         int confirm = JOptionPane.showConfirmDialog(this,
                 DELETE_MESSAGE, DELETE_TITLE, JOptionPane.YES_NO_OPTION);
         return confirm == JOptionPane.YES_NO_OPTION;
@@ -157,7 +98,7 @@ public class TZClocksItemPanel extends JPanel {
 
     public void updateTime() {
         currentTimeLabel.setText(item.getCurrentTime());
-    }
+    } //updates panel with new time zones
 
     public TZClocksItem getItem() {
         return item;

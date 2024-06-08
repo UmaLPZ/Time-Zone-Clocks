@@ -32,7 +32,7 @@ public class TZClocksTabItemPanel extends JPanel {
         DELETE_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(deleteImage, 0.53f));
     }
 
-    TZClocksTabItemPanel(TZClocksPlugin plugin, TZClocksItem item) {
+    public TZClocksTabItemPanel(TZClocksPlugin plugin, TZClocksItem item) {
         this.plugin = plugin;
         this.item = item;
         setLayout(new BorderLayout(5, 0));
@@ -65,7 +65,6 @@ public class TZClocksTabItemPanel extends JPanel {
 
         updateCustomName();
 
-        // Add delete button and action panel
         JPanel actionPanel = new JPanel(new BorderLayout());
         actionPanel.setBackground(new Color(0, 0, 0, 0));
         actionPanel.setOpaque(false);
@@ -95,18 +94,7 @@ public class TZClocksTabItemPanel extends JPanel {
         add(actionPanel, BorderLayout.EAST);
     }
 
-    private void updateCustomName() {
-        if (item.getCustomName() != null) {
-            customNameLabel.setText(item.getCustomName());
-            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
-        } else {
-            customNameLabel.setText("");
-            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
-        }
-    }
-
-
-    private boolean deleteConfirm() {
+    private boolean deleteConfirm() { //self-explanatory
         int confirm = JOptionPane.showConfirmDialog(this,
                 DELETE_MESSAGE, DELETE_TITLE, JOptionPane.YES_NO_OPTION);
         return confirm == JOptionPane.YES_NO_OPTION;
@@ -118,11 +106,23 @@ public class TZClocksTabItemPanel extends JPanel {
         g.fillRect(0, 0, this.getWidth(), this.getHeight());
     }
 
+
+
     public void updateTime() {
         currentTimeLabel.setText(item.getCurrentTime());
     }
 
     public TZClocksItem getItem() {
         return item;
+    }
+
+    private void updateCustomName() {
+        if (item.getCustomName() != null) {
+            customNameLabel.setText(item.getCustomName());
+            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
+        } else {
+            customNameLabel.setText("");
+            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
+        }
     }
 }

@@ -43,7 +43,6 @@ public class TZClocksTabPanel extends JPanel {
     private final GridBagConstraints constraints = new GridBagConstraints();
     private final Map<TZClocksItem, TZClocksTabItemPanel> tabItemPanelsMap = new HashMap<>(); // Map to store clock panels within the tab
 
-
     static {
         final BufferedImage addImage = ImageUtil.loadImageResource(TZClocksPlugin.class, ADD_ICON_PATH);
         ADD_ICON = new ImageIcon(ImageUtil.alphaOffset(addImage, 0.53f));
@@ -240,8 +239,7 @@ public class TZClocksTabPanel extends JPanel {
                     }
                     constraints.gridy++;
 
-                    // Add the clock panel to the map
-                    tabItemPanelsMap.put(c, itemPanel); // Add to the map here
+                    tabItemPanelsMap.put(c, itemPanel);
                 });
             }
             add(topPanel, BorderLayout.NORTH);
@@ -265,27 +263,12 @@ public class TZClocksTabPanel extends JPanel {
                 tab.addClock(clock.getUuid());
 
                 pluginPanel.removeTimezonePanel(clock);
-                addClockToTab(clock);
+                plugin.addClockToTab(clock, tab);
             }
             plugin.dataManager.saveData();
             pluginPanel.updatePanel();
         });
         selectionPanel.show();
-    }
-
-    private void addClockToTab(TZClocksItem clock) {
-        TZClocksTabItemPanel itemPanel = new TZClocksTabItemPanel(plugin, clock);
-        if (index.getAndIncrement() > 0) {
-            itemsPanel.add(createMarginWrapper(itemPanel), constraints);
-        } else {
-            itemsPanel.add(itemPanel, constraints);
-        }
-        constraints.gridy++;
-        itemsPanel.revalidate();
-        itemsPanel.repaint();
-
-        // Add the clock panel to the map
-        tabItemPanelsMap.put(clock, itemPanel);
     }
 
     private boolean deleteConfirm() {
@@ -295,7 +278,7 @@ public class TZClocksTabPanel extends JPanel {
         return confirm == JOptionPane.YES_NO_OPTION;
     }
 
-    private JPanel createMarginWrapper(JPanel panel) {
+    public JPanel createMarginWrapper(JPanel panel) {
         JPanel marginWrapper = new JPanel(new BorderLayout());
         marginWrapper.setOpaque(false);
         marginWrapper.setBorder(new EmptyBorder(5, 0, 0, 0));
@@ -321,24 +304,7 @@ public class TZClocksTabPanel extends JPanel {
 
     public void toggleTabCollapse() {
         tab.setCollapsed(!tab.isCollapsed());
-        if (tab.isCollapsed()) {
-            itemsPanel.removeAll();
-            itemsPanel.setVisible(false);
-        } else {
-            constraints.gridy = 1;
-            index.set(0);
-            for (UUID clockId : tab.getClocks()) {
-                Optional<TZClocksItem> clockItem = plugin.getTimezones().stream()
-                        .filter(item -> item.getUuid().equals(clockId))
-                        .findFirst();
-
-                clockItem.ifPresent(this::addClockToTab);
-            }
-            itemsPanel.setVisible(true);
-        }
-        updateCollapseIcon();
-        itemsPanel.revalidate();
-        itemsPanel.repaint();
+        plugin.switchTabExpandCollapse(tab);
     }
 
     private void updateCollapseIcon() {
@@ -349,8 +315,21 @@ public class TZClocksTabPanel extends JPanel {
         }
     }
 
-    public Map<TZClocksItem, TZClocksTabItemPanel> getTabItemPanelsMap() { // Add this getter
+    public Map<TZClocksItem, TZClocksTabItemPanel> getTabItemPanelsMap() {
         return tabItemPanelsMap;
+    }
+
+    // Add the missing getter methods
+    public GridBagConstraints getConstraints() {
+        return constraints;
+    }
+
+    public AtomicInteger getIndex() {
+        return index;
+    }
+
+    public JPanel getItemsPanel() {
+        return itemsPanel;
     }
 
     @Override
