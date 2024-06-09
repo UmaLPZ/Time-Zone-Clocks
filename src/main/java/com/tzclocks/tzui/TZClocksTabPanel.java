@@ -102,7 +102,7 @@ public class TZClocksTabPanel extends JPanel {
             collapseButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    toggleTabCollapse();
+                    plugin.switchTabExpandCollapse(tab); // Call switchTabExpandCollapse on the plugin
                 }
 
                 @Override
@@ -126,7 +126,7 @@ public class TZClocksTabPanel extends JPanel {
             collapseButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    toggleTabCollapse();
+                    plugin.switchTabExpandCollapse(tab); // Call switchTabExpandCollapse on the plugin
                 }
 
                 @Override
@@ -307,7 +307,7 @@ public class TZClocksTabPanel extends JPanel {
         plugin.switchTabExpandCollapse(tab);
     }
 
-    private void updateCollapseIcon() {
+    public void updateCollapseIcon() {
         Component[] headerComponents = ((JPanel) getComponents()[0]).getComponents();
         if (headerComponents.length > 0 && headerComponents[0] instanceof JLabel) {
             JLabel collapseButton = (JLabel) headerComponents[0];

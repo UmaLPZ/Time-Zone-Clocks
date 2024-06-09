@@ -171,7 +171,16 @@ public class TZClocksPlugin extends Plugin {
 	public void switchTabExpandCollapse(TZClocksTab tab) {
 		tab.setCollapsed(!tab.isCollapsed());
 		dataManager.saveData();
-		SwingUtilities.invokeLater(() -> panel.updatePanel());
+
+		// Update the collapse/expand icon of the tab panel
+		SwingUtilities.invokeLater(() -> {
+			TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab); // Get the tab panel from the map
+			if (tabPanel != null) {
+				tabPanel.updateCollapseIcon(); // Update the icon
+			}
+		});
+
+		SwingUtilities.invokeLater(() -> panel.updatePanel()); // Refresh the entire panel
 	}
 
 	public void removeClockFromTab(TZClocksItem clock) {
@@ -180,7 +189,11 @@ public class TZClocksPlugin extends Plugin {
 				tab.removeClock(clock.getUuid());
 
 				SwingUtilities.invokeLater(() -> {
-					panel.updatePanel();
+					// Refresh the panel to reflect the removal
+					TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
+					if (tabPanel != null) {
+						tabPanel.toggleTabCollapse(); // Only call toggleTabCollapse once
+					}
 				});
 				break;
 			}
