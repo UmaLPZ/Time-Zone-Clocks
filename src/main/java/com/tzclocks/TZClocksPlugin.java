@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -46,7 +47,8 @@ public class TZClocksPlugin extends Plugin {
 
 	@Inject
 	private Client client;
-
+	@Inject
+	private ClientThread clientThread;
 	@Inject
 	private ClientToolbar clientToolbar;
 
@@ -71,6 +73,7 @@ public class TZClocksPlugin extends Plugin {
 	private List<TZClocksTab> tabs = new ArrayList<>();
 
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+	private boolean isActive;
 
 	@Override
 	protected void startUp() throws Exception {
@@ -87,12 +90,15 @@ public class TZClocksPlugin extends Plugin {
 		SwingUtilities.invokeLater(() -> panel.updatePanel());
 
 		scheduler.scheduleAtFixedRate(this::updateTimezoneData, 0, 1, TimeUnit.SECONDS);
+		isActive = true;
 	}
 
 	@Override
 	protected void shutDown() {
 		clientToolbar.removeNavigation(navButton);
+		dataManager.saveData(); //saves data one last time before closing
 		scheduler.shutdown();
+		isActive = false;
 	}
 
 	@Provides
@@ -101,23 +107,21 @@ public class TZClocksPlugin extends Plugin {
 	}
 
 	public void addTimezoneToPanel(String timezoneId) {
-		String customName = null;
+		clientThread.invokeLater(() -> {
+			String customName = null;
 
-		if (timezoneId.equals(ZoneId.systemDefault().toString())) {
-			customName = "Local Time";
-		} else if (timezoneId.equals("Europe/London")) {
-			customName = "Jagex Time";
-		}
 
-		ZoneId zoneId = ZoneId.of(timezoneId);
-		ZonedDateTime now = ZonedDateTime.now(zoneId);
-		DateTimeFormatter formatter = getFormatter();
-		String currentTime = now.format(formatter);
-		TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, customName);
-		timezones.add(newItem);
 
-		dataManager.saveData();
-		SwingUtilities.invokeLater(() -> panel.updatePanel());
+			ZoneId zoneId = ZoneId.of(timezoneId);
+			ZonedDateTime now = ZonedDateTime.now(zoneId);
+			DateTimeFormatter formatter = getFormatter();
+			String currentTime = now.format(formatter);
+			TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, customName);
+			timezones.add(newItem);
+
+			dataManager.saveData();
+			SwingUtilities.invokeLater(() -> panel.updatePanel());
+		});
 	}
 
 	public void removeTimezoneFromPanel(TZClocksItem item) {
@@ -127,10 +131,22 @@ public class TZClocksPlugin extends Plugin {
 		SwingUtilities.invokeLater(() -> panel.updatePanel());
 	}
 
+	public void editClockCustomName(TZClocksItem clock) {
+		String newName = JOptionPane.showInputDialog(panel, "Enter a custom name for the clock:", clock.getCustomName());
+		if (newName != null) {
+			clock.setCustomName(newName);
+			dataManager.saveData();
+			SwingUtilities.invokeLater(() -> panel.updatePanel());
+		}
+	}
+
 	public void addTab(String tabName) {
+		clientThread.invokeLater(() -> {
 		tabs.add(new TZClocksTab(tabName, new ArrayList<>()));
 		SwingUtilities.invokeLater(() -> panel.addTabPanel(tabs.get(tabs.size() - 1)));
 		dataManager.saveData();
+		SwingUtilities.invokeLater(() -> panel.updatePanel());
+		});
 	}
 
 	public void editTab(TZClocksTab tab) {
@@ -151,6 +167,8 @@ public class TZClocksPlugin extends Plugin {
 			SwingUtilities.invokeLater(() -> panel.updatePanel());
 		}
 	}
+
+
 
 	public void removeTab(TZClocksTab tab) {
 		for (UUID clockId : tab.getClocks()) {
@@ -180,7 +198,7 @@ public class TZClocksPlugin extends Plugin {
 			}
 		});
 
-		SwingUtilities.invokeLater(() -> panel.updatePanel()); // Refresh the entire panel
+		 panel.updatePanel(); // Refresh the entire panel
 	}
 
 	public void removeClockFromTab(TZClocksItem clock) {
