@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TZClocksPluginPanel extends PluginPanel {
     private final TZClocksPlugin plugin;
@@ -27,7 +29,7 @@ public class TZClocksPluginPanel extends PluginPanel {
 
     private final JComboBox<TZRegionEnum> regionDropdown = new JComboBox<>();
     private final JComboBox<String> timezoneDropdown = new JComboBox<>();
-    private final JPanel clockListPanel;
+    private final JPanel clockListPanel = new JPanel();
     private final Map<TZClocksItem, TZClocksItemPanel> timezonePanelsMap = new HashMap<>();
     private final Map<TZClocksTab, TZClocksTabPanel> tabPanelsMap = new HashMap<>();
     private final GridBagConstraints constraints = new GridBagConstraints();
@@ -44,11 +46,11 @@ public class TZClocksPluginPanel extends PluginPanel {
         JPanel topPanel = createTopPanel();
         add(topPanel, BorderLayout.NORTH);
 
-        clockListPanel = new JPanel(new GridBagLayout());
-        clockListPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        clockListPanel.setLayout(new GridBagLayout());
 
         JPanel pWrapper = new JPanel(new BorderLayout());
         pWrapper.add(clockListPanel, BorderLayout.NORTH);
+
 
         JScrollPane scrollPane = new JScrollPane(pWrapper);
         scrollPane.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -125,14 +127,11 @@ public class TZClocksPluginPanel extends PluginPanel {
 
         timezoneDropdown.removeAllItems();
 
-        if (selectedRegion == TZRegionEnum.SPECIAL_TIMES) {
-            timezoneDropdown.addItem("Local Time#" + ZoneId.systemDefault());
-            timezoneDropdown.addItem("Jagex Time#Europe/London");
-        } else {
+
             for (ZoneId zoneId : zoneIds) {
                 timezoneDropdown.addItem(zoneId.toString());
             }
-        }
+
     }
 
     public void addTimezonePanel(TZClocksItem item) { //adds the time zone panel
@@ -148,6 +147,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         constraints.gridy++;
         clockListPanel.revalidate();
         clockListPanel.repaint();
+
     }
 
     public void removeTimezonePanel(TZClocksItem item) { //removes time zone from panel
@@ -203,21 +203,46 @@ public class TZClocksPluginPanel extends PluginPanel {
     }
 
     public void updatePanel() {
-        clockListPanel.removeAll();
+        Logger log = LoggerFactory.getLogger(TZClocksPluginPanel.class); // Get the logger
+        log.info("updatePanel method called"); // Log a message when the method is called
 
+        clockListPanel.removeAll();
         constraints.gridy = 0;
 
+        // Add tabs first
         for (TZClocksTab tab : plugin.getTabs()) {
-            addTabPanel(tab);
+            // Create a new TZClocksTabPanel instance for each tab
+            TZClocksTabPanel tabPanel = new TZClocksTabPanel(plugin, this, tab);
+            tabPanelsMap.put(tab, tabPanel);
+
+            if (constraints.gridy > 0) {
+                clockListPanel.add(createMarginWrapper(tabPanel), constraints);
+            } else {
+                clockListPanel.add(tabPanel, constraints);
+            }
+
+            constraints.gridy++;
         }
 
+        // Then add individual clocks
         for (TZClocksItem clock : plugin.getTimezones()) {
             boolean isInTab = plugin.getTabs().stream()
-                    .anyMatch(tab -> tab.getClocks().contains(clock.getUuid()));
+                    .anyMatch(t -> t.getClocks().contains(clock.getUuid()));
             if (!isInTab) {
-                addTimezonePanel(clock);
+                // Create a new TZClocksItemPanel for each uncategorized clock
+                TZClocksItemPanel clockPanel = new TZClocksItemPanel(plugin, clock);
+                timezonePanelsMap.put(clock, clockPanel);
+
+                if (constraints.gridy > 0) {
+                    clockListPanel.add(createMarginWrapper(clockPanel), constraints);
+                } else {
+                    clockListPanel.add(clockPanel, constraints);
+                }
+
+                constraints.gridy++;
             }
         }
+
         clockListPanel.revalidate();
         clockListPanel.repaint();
     }

@@ -29,11 +29,11 @@ public class TZClocksItemPanel extends JPanel {
     private final TZClocksPlugin plugin; // Reference to the plugin
 
     static {
-        final BufferedImage deleteImage = ImageUtil.loadImageResource(TZClocksItemPanel.class, DELETE_ICON_PATH);
+        final BufferedImage deleteImage = ImageUtil.resizeImage(ImageUtil.loadImageResource(TZClocksItemPanel.class, DELETE_ICON_PATH), 10, 10);
         DELETE_ICON = new ImageIcon(deleteImage);
         DELETE_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(deleteImage, 0.53f));
 
-        final BufferedImage editImage = ImageUtil.loadImageResource(TZClocksItemPanel.class, EDIT_ICON_PATH);
+        final BufferedImage editImage = ImageUtil.resizeImage(ImageUtil.loadImageResource(TZClocksItemPanel.class, EDIT_ICON_PATH), 10, 10);
         EDIT_ICON = new ImageIcon(editImage);
         EDIT_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(editImage, 0.53f));
     }
@@ -71,20 +71,70 @@ public class TZClocksItemPanel extends JPanel {
 
         updateCustomName();
 
+        // Action Panel (Delete, Edit)
+        JPanel actionPanel = new JPanel(new GridLayout(2, 1, 0, 0)); // 2 rows, 1 column
+        actionPanel.setBackground(new Color(0, 0, 0, 0));
+        actionPanel.setOpaque(false);
+
+        // Edit button
+        JLabel editButton = new JLabel(EDIT_ICON);
+        editButton.setBorder(new EmptyBorder(0, 0, 0, 5));
+        editButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                plugin.editClockCustomName(item);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                editButton.setIcon(EDIT_HOVER_ICON);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                editButton.setIcon(EDIT_ICON);
+            }
+        });
+        actionPanel.add(editButton); // Add edit button first
+
+        // Delete button
+        JLabel deleteButton = new JLabel(DELETE_ICON);
+        deleteButton.setBorder(new EmptyBorder(0, 0, 0, 3));
+        deleteButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (deleteConfirm()) {
+                    plugin.removeTimezoneFromPanel(item);
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                deleteButton.setIcon(DELETE_HOVER_ICON);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                deleteButton.setIcon(DELETE_ICON);
+            }
+        });
+        actionPanel.add(deleteButton);
+
         add(timezoneDetailsPanel, BorderLayout.WEST);
+        add(actionPanel, BorderLayout.EAST);
     }
 
     private void updateCustomName() {
         if (item.getCustomName() != null) {
             customNameLabel.setText(item.getCustomName());
-            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0)); // Add spacing above timezone name
+            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
         } else {
-            customNameLabel.setText(""); // Blank by default
-            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0)); // Remove spacing
+            customNameLabel.setText("");
+            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
         }
     }
 
-    private boolean deleteConfirm() { //self-explanatory
+    private boolean deleteConfirm() {
         int confirm = JOptionPane.showConfirmDialog(this,
                 DELETE_MESSAGE, DELETE_TITLE, JOptionPane.YES_NO_OPTION);
         return confirm == JOptionPane.YES_NO_OPTION;
@@ -98,7 +148,7 @@ public class TZClocksItemPanel extends JPanel {
 
     public void updateTime() {
         currentTimeLabel.setText(item.getCurrentTime());
-    } //updates panel with new time zones
+    }
 
     public TZClocksItem getItem() {
         return item;
