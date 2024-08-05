@@ -6,7 +6,7 @@ This plugin's code is heavily based off the code for the [Market Watcher](https:
 # Planned Changes
 * Add option to include the date (for people with friends tomorrow/yesterday)
 * Add option to show difference from local time
-* Add categories for organizing clocks (similar to Market Watcher)
+* ~~Add categories for organizing clocks (similar to Market Watcher)~~ Added in v1.2
 * Add ability to reposition clocks (also similar to Market Watcher)
 * ~~Ability to rename clocks~~ Added in v1.1
 
