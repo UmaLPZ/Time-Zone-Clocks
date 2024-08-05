@@ -29,7 +29,7 @@ public class TZClocksSelectionPanel {
         this.clockList = new JList<>(clocks.toArray(new TZClocksItem[0]));
         this.clockList.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
-        // Top Panel
+
         JPanel topPanel = new JPanel(new BorderLayout());
 
         JLabel message = new JLabel(MESSAGE);
@@ -40,11 +40,11 @@ public class TZClocksSelectionPanel {
         topPanel.add(message, BorderLayout.NORTH);
         topPanel.add(subMessage, BorderLayout.CENTER);
 
-        // Center Panel with Clocks
+
         JPanel centerPanel = new JPanel(new BorderLayout(5, 5));
         centerPanel.setPreferredSize(new Dimension(250, 300));
 
-        // Custom cell renderer to display clock names
+
         clockList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -58,12 +58,12 @@ public class TZClocksSelectionPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(clockList);
-        scrollPane.setBorder(new EmptyBorder(0, 5, 0, 5)); // Add some padding around the list
+        scrollPane.setBorder(new EmptyBorder(0, 5, 0, 5));
 
         centerPanel.add(topPanel, BorderLayout.NORTH);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Options
+
         JOptionPane optionPane = new JOptionPane(centerPanel);
 
         JButton okButton = new JButton(OK);
@@ -74,7 +74,7 @@ public class TZClocksSelectionPanel {
 
         optionPane.setOptions(new Object[]{okButton, cancelButton});
 
-        dialog = optionPane.createDialog(parent, TITLE); // Use parent here
+        dialog = optionPane.createDialog(parent, TITLE);
         dialog.setTitle(TITLE);
     }
 
@@ -91,8 +91,8 @@ public class TZClocksSelectionPanel {
             okEvent.actionPerformed(e);
         }
 
-        // Refresh the tab display
-        SwingUtilities.invokeLater(() -> pluginPanel.updatePanel()); // Call updatePanel()
+
+        SwingUtilities.invokeLater(() -> pluginPanel.updatePanel());
 
         dialog.setVisible(false);
     }

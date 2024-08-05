@@ -41,7 +41,7 @@ public class TZClocksTabPanel extends JPanel {
     private final TZClocksPluginPanel pluginPanel;
     private final JPanel itemsPanel;
     private final GridBagConstraints constraints = new GridBagConstraints();
-    private final Map<TZClocksItem, TZClocksTabItemPanel> tabItemPanelsMap = new HashMap<>(); // Map to store clock panels within the tab
+    private final Map<TZClocksItem, TZClocksTabItemPanel> tabItemPanelsMap = new HashMap<>();
 
     static {
         final BufferedImage addImage = ImageUtil.loadImageResource(TZClocksPlugin.class, ADD_ICON_PATH);
@@ -102,7 +102,7 @@ public class TZClocksTabPanel extends JPanel {
             collapseButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    plugin.switchTabExpandCollapse(tab); // Call switchTabExpandCollapse on the plugin
+                    plugin.switchTabExpandCollapse(tab);
                 }
 
                 @Override
@@ -126,7 +126,7 @@ public class TZClocksTabPanel extends JPanel {
             collapseButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    plugin.switchTabExpandCollapse(tab); // Call switchTabExpandCollapse on the plugin
+                    plugin.switchTabExpandCollapse(tab);
                 }
 
                 @Override
@@ -286,18 +286,6 @@ public class TZClocksTabPanel extends JPanel {
         return marginWrapper;
     }
 
-    public void updateTabName(String newName) {
-        Component[] components = getComponents();
-        if (components.length > 0 && components[0] instanceof JPanel) {
-            JPanel headerPanel = (JPanel) components[0];
-            Component[] headerComponents = headerPanel.getComponents();
-            if (headerComponents.length > 1 && headerComponents[1] instanceof JLabel) {
-                JLabel tabNameLabel = (JLabel) headerComponents[1];
-                tabNameLabel.setText(newName);
-            }
-        }
-    }
-
     public TZClocksTab getTab() {
         return tab;
     }
@@ -319,7 +307,6 @@ public class TZClocksTabPanel extends JPanel {
         return tabItemPanelsMap;
     }
 
-    // Add the missing getter methods
     public GridBagConstraints getConstraints() {
         return constraints;
     }

@@ -96,7 +96,7 @@ public class TZClocksPlugin extends Plugin {
 	@Override
 	protected void shutDown() {
 		clientToolbar.removeNavigation(navButton);
-		dataManager.saveData(); //saves data one last time before closing
+		dataManager.saveData();
 		scheduler.shutdown();
 		isActive = false;
 	}
@@ -190,15 +190,14 @@ public class TZClocksPlugin extends Plugin {
 		tab.setCollapsed(!tab.isCollapsed());
 		dataManager.saveData();
 
-		// Update the collapse/expand icon of the tab panel
 		SwingUtilities.invokeLater(() -> {
-			TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab); // Get the tab panel from the map
+			TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
 			if (tabPanel != null) {
-				tabPanel.updateCollapseIcon(); // Update the icon
+				tabPanel.updateCollapseIcon();
 			}
 		});
 
-		 panel.updatePanel(); // Refresh the entire panel
+		 panel.updatePanel();
 	}
 
 	public void removeClockFromTab(TZClocksItem clock) {
@@ -207,10 +206,9 @@ public class TZClocksPlugin extends Plugin {
 				tab.removeClock(clock.getUuid());
 
 				SwingUtilities.invokeLater(() -> {
-					// Refresh the panel to reflect the removal
 					TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
 					if (tabPanel != null) {
-						tabPanel.toggleTabCollapse(); // Only call toggleTabCollapse once
+						tabPanel.toggleTabCollapse();
 					}
 				});
 				break;
@@ -260,9 +258,9 @@ public class TZClocksPlugin extends Plugin {
 		TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
 		if (tabPanel != null) {
 			TZClocksTabItemPanel itemPanel = new TZClocksTabItemPanel(this, clock);
-			tabPanel.getTabItemPanelsMap().put(clock, itemPanel); // Add to the map
+			tabPanel.getTabItemPanelsMap().put(clock, itemPanel);
 
-			GridBagConstraints constraints = tabPanel.getConstraints(); // Get constraints from the tab panel
+			GridBagConstraints constraints = tabPanel.getConstraints();
 			if (tabPanel.getIndex().getAndIncrement() > 0) {
 				tabPanel.getItemsPanel().add(tabPanel.createMarginWrapper(itemPanel), constraints);
 			} else {

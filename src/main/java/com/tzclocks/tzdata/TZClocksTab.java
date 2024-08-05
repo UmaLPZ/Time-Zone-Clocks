@@ -22,7 +22,7 @@ public class TZClocksTab {
 
     public TZClocksTab(String name, List<UUID> clocks) {
         this.name = name;
-        this.isCollapsed = true; // Collapsed by default
+        this.isCollapsed = true;
         this.clocks = clocks;
     }
 

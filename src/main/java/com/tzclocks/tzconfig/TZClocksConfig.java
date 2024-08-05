@@ -22,6 +22,4 @@ public interface TZClocksConfig extends Config {
 		return TZFormatEnum.TWELVE_HOUR;
 	} //default format
 
-	void setTimeFormat(TZFormatEnum tzFormat); //says no usages but is important
-	void setTimezones(List<String> timezones); //also says no usages but also important
 }

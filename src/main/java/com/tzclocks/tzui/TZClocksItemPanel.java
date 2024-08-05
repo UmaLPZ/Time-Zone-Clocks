@@ -24,9 +24,9 @@ public class TZClocksItemPanel extends JPanel {
 
     private final TZClocksItem item;
     private final JLabel currentTimeLabel;
-    private final JLabel timezoneNameLabel; // Label for displaying the timezone name
-    private final JLabel customNameLabel; // Label for displaying the custom name
-    private final TZClocksPlugin plugin; // Reference to the plugin
+    private final JLabel timezoneNameLabel;
+    private final JLabel customNameLabel;
+    private final TZClocksPlugin plugin;
 
     static {
         final BufferedImage deleteImage = ImageUtil.resizeImage(ImageUtil.loadImageResource(TZClocksItemPanel.class, DELETE_ICON_PATH), 10, 10);
@@ -71,12 +71,12 @@ public class TZClocksItemPanel extends JPanel {
 
         updateCustomName();
 
-        // Action Panel (Delete, Edit)
-        JPanel actionPanel = new JPanel(new GridLayout(2, 1, 0, 0)); // 2 rows, 1 column
+
+        JPanel actionPanel = new JPanel(new GridLayout(2, 1, 0, 0));
         actionPanel.setBackground(new Color(0, 0, 0, 0));
         actionPanel.setOpaque(false);
 
-        // Edit button
+
         JLabel editButton = new JLabel(EDIT_ICON);
         editButton.setBorder(new EmptyBorder(0, 0, 0, 5));
         editButton.addMouseListener(new MouseAdapter() {
@@ -95,9 +95,9 @@ public class TZClocksItemPanel extends JPanel {
                 editButton.setIcon(EDIT_ICON);
             }
         });
-        actionPanel.add(editButton); // Add edit button first
+        actionPanel.add(editButton);
 
-        // Delete button
+
         JLabel deleteButton = new JLabel(DELETE_ICON);
         deleteButton.setBorder(new EmptyBorder(0, 0, 0, 3));
         deleteButton.addMouseListener(new MouseAdapter() {
@@ -150,7 +150,4 @@ public class TZClocksItemPanel extends JPanel {
         currentTimeLabel.setText(item.getCurrentTime());
     }
 
-    public TZClocksItem getItem() {
-        return item;
-    }
 }
