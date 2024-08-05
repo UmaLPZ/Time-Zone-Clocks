@@ -1,8 +1,5 @@
-package com.tzclocks.tzui;
+package com.tzclocks.backup;
 
-import com.tzclocks.TZClocksPlugin;
-import com.tzclocks.tzdata.TZClocksItem;
-import com.tzclocks.tzdata.TZClocksTab;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.ImageUtil;
 
@@ -12,11 +9,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.tzclocks.tzutilities.TZConstants.*;
@@ -41,7 +35,7 @@ public class TZClocksTabPanel extends JPanel {
     private final TZClocksPluginPanel pluginPanel;
     private final JPanel itemsPanel;
     private final GridBagConstraints constraints = new GridBagConstraints();
-    private final Map<TZClocksItem, TZClocksTabItemPanel> tabItemPanelsMap = new HashMap<>();
+    private final Map<TZClocksItem, TZClocksTabItemPanel> tabItemPanelsMap = new HashMap<>(); // Map to store clock panels within the tab
 
     static {
         final BufferedImage addImage = ImageUtil.loadImageResource(TZClocksPlugin.class, ADD_ICON_PATH);
@@ -102,7 +96,7 @@ public class TZClocksTabPanel extends JPanel {
             collapseButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    plugin.switchTabExpandCollapse(tab);
+                    plugin.switchTabExpandCollapse(tab); // Call switchTabExpandCollapse on the plugin
                 }
 
                 @Override
@@ -126,7 +120,7 @@ public class TZClocksTabPanel extends JPanel {
             collapseButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    plugin.switchTabExpandCollapse(tab);
+                    plugin.switchTabExpandCollapse(tab); // Call switchTabExpandCollapse on the plugin
                 }
 
                 @Override
@@ -286,6 +280,18 @@ public class TZClocksTabPanel extends JPanel {
         return marginWrapper;
     }
 
+    public void updateTabName(String newName) {
+        Component[] components = getComponents();
+        if (components.length > 0 && components[0] instanceof JPanel) {
+            JPanel headerPanel = (JPanel) components[0];
+            Component[] headerComponents = headerPanel.getComponents();
+            if (headerComponents.length > 1 && headerComponents[1] instanceof JLabel) {
+                JLabel tabNameLabel = (JLabel) headerComponents[1];
+                tabNameLabel.setText(newName);
+            }
+        }
+    }
+
     public TZClocksTab getTab() {
         return tab;
     }
@@ -307,6 +313,7 @@ public class TZClocksTabPanel extends JPanel {
         return tabItemPanelsMap;
     }
 
+    // Add the missing getter methods
     public GridBagConstraints getConstraints() {
         return constraints;
     }

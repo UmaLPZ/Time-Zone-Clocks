@@ -19,14 +19,14 @@ public class TZClocksTabItemPanel extends JPanel {
     private static final String DELETE_MESSAGE = "Are you sure you want to remove this clock from the tab?";
     private static final ImageIcon DELETE_ICON;
     private static final ImageIcon DELETE_HOVER_ICON;
-    private static final ImageIcon EDIT_ICON; // Add edit icon
-    private static final ImageIcon EDIT_HOVER_ICON; // Add edit hover icon
+    private static final ImageIcon EDIT_ICON;
+    private static final ImageIcon EDIT_HOVER_ICON;
 
     private final TZClocksItem item;
     private final JLabel currentTimeLabel;
-    private final JLabel timezoneNameLabel; // Label for displaying the timezone name
-    private final JLabel customNameLabel; // Label for displaying the custom name
-    private final TZClocksPlugin plugin; // Reference to the plugin
+    private final JLabel timezoneNameLabel;
+    private final JLabel customNameLabel;
+    private final TZClocksPlugin plugin;
 
     static {
         final BufferedImage deleteImage = ImageUtil.resizeImage(ImageUtil.loadImageResource(TZClocksTabItemPanel.class, DELETE_ICON_PATH), 10, 10);
@@ -49,7 +49,7 @@ public class TZClocksTabItemPanel extends JPanel {
         timezoneDetailsPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
@@ -72,18 +72,18 @@ public class TZClocksTabItemPanel extends JPanel {
 
         updateCustomName();
 
-        // Action Panel (Delete, Edit)
-       JPanel actionPanel = new JPanel(new GridLayout(2, 1, 0, 0)); // 2 rows, 1 column
+
+       JPanel actionPanel = new JPanel(new GridLayout(2, 1, 0, 0));
        actionPanel.setBackground(new Color(0, 0, 0, 0));
        actionPanel.setOpaque(false);
 
-        // Edit button
+
         JLabel editButton = new JLabel(EDIT_ICON);
         editButton.setBorder(new EmptyBorder(0, 0, 0, 5));
         editButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                plugin.editClockCustomName(item); // Call editClockCustomName in TZClocksPlugin
+                plugin.editClockCustomName(item);
             }
 
             @Override
@@ -128,10 +128,10 @@ public class TZClocksTabItemPanel extends JPanel {
     private void updateCustomName() {
         if (item.getCustomName() != null) {
             customNameLabel.setText(item.getCustomName());
-            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0)); // Add spacing above timezone name
+            timezoneNameLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
         } else {
             customNameLabel.setText(""); // Blank by default
-            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0)); // Remove spacing
+            timezoneNameLabel.setBorder(new EmptyBorder(0, 0, 0, 0));
         }
     }
 
@@ -152,7 +152,5 @@ public class TZClocksTabItemPanel extends JPanel {
         currentTimeLabel.setText(item.getCurrentTime());
     }
 
-    public TZClocksItem getItem() {
-        return item;
-    }
+
 }

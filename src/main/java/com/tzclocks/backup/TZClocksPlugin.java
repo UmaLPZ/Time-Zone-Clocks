@@ -1,15 +1,6 @@
-package com.tzclocks;
+package com.tzclocks.backup;
 
 import com.google.inject.Provides;
-import com.tzclocks.tzconfig.TZClocksConfig;
-import com.tzclocks.tzdata.TZClocksDataManager;
-import com.tzclocks.tzdata.TZClocksItem;
-import com.tzclocks.tzdata.TZClocksTab;
-import com.tzclocks.tzui.TZClocksTabPanel;
-import com.tzclocks.tzutilities.TZFormatEnum;
-import com.tzclocks.tzui.TZClocksItemPanel;
-import com.tzclocks.tzui.TZClocksPluginPanel;
-import com.tzclocks.tzui.TZClocksTabItemPanel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -96,13 +87,13 @@ public class TZClocksPlugin extends Plugin {
 	@Override
 	protected void shutDown() {
 		clientToolbar.removeNavigation(navButton);
-		dataManager.saveData();
+		dataManager.saveData(); //saves data one last time before closing
 		scheduler.shutdown();
 		isActive = false;
 	}
 
 	@Provides
-	TZClocksConfig provideConfig(ConfigManager configManager) {
+    TZClocksConfig provideConfig(ConfigManager configManager) {
 		return configManager.getConfig(TZClocksConfig.class);
 	}
 
@@ -190,14 +181,15 @@ public class TZClocksPlugin extends Plugin {
 		tab.setCollapsed(!tab.isCollapsed());
 		dataManager.saveData();
 
+		// Update the collapse/expand icon of the tab panel
 		SwingUtilities.invokeLater(() -> {
-			TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
+			TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab); // Get the tab panel from the map
 			if (tabPanel != null) {
-				tabPanel.updateCollapseIcon();
+				tabPanel.updateCollapseIcon(); // Update the icon
 			}
 		});
 
-		 panel.updatePanel();
+		 panel.updatePanel(); // Refresh the entire panel
 	}
 
 	public void removeClockFromTab(TZClocksItem clock) {
@@ -206,9 +198,10 @@ public class TZClocksPlugin extends Plugin {
 				tab.removeClock(clock.getUuid());
 
 				SwingUtilities.invokeLater(() -> {
+					// Refresh the panel to reflect the removal
 					TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
 					if (tabPanel != null) {
-						tabPanel.toggleTabCollapse();
+						tabPanel.toggleTabCollapse(); // Only call toggleTabCollapse once
 					}
 				});
 				break;
@@ -258,9 +251,9 @@ public class TZClocksPlugin extends Plugin {
 		TZClocksTabPanel tabPanel = panel.getTabPanelsMap().get(tab);
 		if (tabPanel != null) {
 			TZClocksTabItemPanel itemPanel = new TZClocksTabItemPanel(this, clock);
-			tabPanel.getTabItemPanelsMap().put(clock, itemPanel);
+			tabPanel.getTabItemPanelsMap().put(clock, itemPanel); // Add to the map
 
-			GridBagConstraints constraints = tabPanel.getConstraints();
+			GridBagConstraints constraints = tabPanel.getConstraints(); // Get constraints from the tab panel
 			if (tabPanel.getIndex().getAndIncrement() > 0) {
 				tabPanel.getItemsPanel().add(tabPanel.createMarginWrapper(itemPanel), constraints);
 			} else {

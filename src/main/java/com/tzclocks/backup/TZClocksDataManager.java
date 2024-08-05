@@ -1,8 +1,7 @@
-package com.tzclocks.tzdata;
+package com.tzclocks.backup;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.tzclocks.TZClocksPlugin;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -28,9 +27,9 @@ public class TZClocksDataManager {
     private final Gson gson;
 
     private List<TZClocksItem> timezoneItems = new ArrayList<>();
-    private List<TZClocksTabData> tabsData = new ArrayList<>();
+    private List<TZClocksTabData> tabsData = new ArrayList<>(); // Use tabsData instead of tabs
     private final Type timezoneItemsType = new TypeToken<ArrayList<TZClocksItem>>() {}.getType();
-    private final Type tabsDataType = new TypeToken<ArrayList<TZClocksTabData>>() {}.getType();
+    private final Type tabsDataType = new TypeToken<ArrayList<TZClocksTabData>>() {}.getType(); // Use tabsDataType
 
     @Inject
     public TZClocksDataManager(TZClocksPlugin plugin, Client client, ConfigManager configManager, Gson gson) {
@@ -46,7 +45,7 @@ public class TZClocksDataManager {
         }
 
         timezoneItems.clear();
-        tabsData.clear();
+        tabsData.clear(); // Use tabsData
 
         String timezonesJson = configManager.getConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES);
         if (timezonesJson == null || timezonesJson.equals(EMPTY_ARRAY)) {
@@ -72,7 +71,7 @@ public class TZClocksDataManager {
         String tabsJson = configManager.getConfiguration(CONFIG_GROUP, CONFIG_KEY_TABS);
         if (tabsJson != null && !tabsJson.equals(EMPTY_ARRAY)) {
             try {
-                tabsData = gson.fromJson(tabsJson, tabsDataType);
+                tabsData = gson.fromJson(tabsJson, tabsDataType); // Use tabsDataType
                 convertTabs();
             } catch (Exception e) {
                 log.error("Error loading tabs:", e);
@@ -96,9 +95,9 @@ public class TZClocksDataManager {
                     tabClockIds.add(item.getUuid());
                 }
             }
-            tabsData.add(new TZClocksTabData(tab.getName(), tab.isCollapsed(), tabClockIds));
+            tabsData.add(new TZClocksTabData(tab.getName(), tab.isCollapsed(), tabClockIds)); // Use tabsData
         }
-        final String tabsJson = gson.toJson(tabsData);
+        final String tabsJson = gson.toJson(tabsData); // Use tabsData
         configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TABS, tabsJson);
     }
 
@@ -112,7 +111,7 @@ public class TZClocksDataManager {
 
     private void convertTabs() {
         List<TZClocksTab> watchTabs = new ArrayList<>();
-        for (TZClocksTabData tabData : tabsData) {
+        for (TZClocksTabData tabData : tabsData) { // Use tabsData
             List<UUID> clockIds = tabData.getClocks();
             watchTabs.add(new TZClocksTab(tabData.getName(), tabData.isCollapsed(), clockIds));
         }

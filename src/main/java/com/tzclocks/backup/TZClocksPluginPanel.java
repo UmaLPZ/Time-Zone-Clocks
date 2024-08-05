@@ -1,12 +1,9 @@
-package com.tzclocks.tzui;
+package com.tzclocks.backup;
 
-import com.tzclocks.TZClocksPlugin;
-import com.tzclocks.tzconfig.TZClocksConfig;
-import com.tzclocks.tzdata.TZClocksItem;
-import com.tzclocks.tzdata.TZClocksTab;
-import com.tzclocks.tzutilities.TZRegionEnum;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -16,12 +13,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TZClocksPluginPanel extends PluginPanel {
     private final TZClocksPlugin plugin;
@@ -68,7 +62,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         updateTimeZoneDropdown();
     }
 
-    private JPanel createTopPanel() {
+    private JPanel createTopPanel() { //panel for the plugin. dropdowns and button
         JPanel topPanel = new JPanel(new GridLayout(4, 1, 0, 5));
         topPanel.setBorder(new EmptyBorder(0, 0, 10, 0));
 
@@ -121,7 +115,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         }
     }
 
-    private void updateTimeZoneDropdown() {
+    private void updateTimeZoneDropdown() { //self-explanatory. updates the time zone dropdown to match region
         TZRegionEnum selectedRegion = (TZRegionEnum) regionDropdown.getSelectedItem();
         List<ZoneId> zoneIds = getTimeZoneIdsForRegion(selectedRegion);
 
@@ -134,7 +128,7 @@ public class TZClocksPluginPanel extends PluginPanel {
 
     }
 
-    public void addTimezonePanel(TZClocksItem item) {
+    public void addTimezonePanel(TZClocksItem item) { //adds the time zone panel
         TZClocksItemPanel clockPanel = new TZClocksItemPanel(plugin, item);
         timezonePanelsMap.put(item, clockPanel);
 
@@ -150,7 +144,7 @@ public class TZClocksPluginPanel extends PluginPanel {
 
     }
 
-    public void removeTimezonePanel(TZClocksItem item) {
+    public void removeTimezonePanel(TZClocksItem item) { //removes time zone from panel
         TZClocksItemPanel panelToRemove = timezonePanelsMap.get(item);
         if (panelToRemove != null) {
             Component parent = panelToRemove.getParent();
@@ -161,6 +155,13 @@ public class TZClocksPluginPanel extends PluginPanel {
             }
             timezonePanelsMap.remove(item);
         }
+    }
+
+    public void removeAllClocks() { //removes clocks to prevent re-adding previously selected clocks. there might be an alternative
+        clockListPanel.removeAll();
+        timezonePanelsMap.clear();
+        revalidate();
+        repaint();
     }
 
     public void addTabPanel(TZClocksTab tab) {
@@ -196,12 +197,15 @@ public class TZClocksPluginPanel extends PluginPanel {
     }
 
     public void updatePanel() {
+        Logger log = LoggerFactory.getLogger(TZClocksPluginPanel.class); // Get the logger
+        log.info("updatePanel method called"); // Log a message when the method is called
+
         clockListPanel.removeAll();
+        constraints.gridy = 0;
 
-        constraints.gridy++;
-
-
+        // Add tabs first
         for (TZClocksTab tab : plugin.getTabs()) {
+            // Create a new TZClocksTabPanel instance for each tab
             TZClocksTabPanel tabPanel = new TZClocksTabPanel(plugin, this, tab);
             tabPanelsMap.put(tab, tabPanel);
 
@@ -214,11 +218,12 @@ public class TZClocksPluginPanel extends PluginPanel {
             constraints.gridy++;
         }
 
-
+        // Then add individual clocks
         for (TZClocksItem clock : plugin.getTimezones()) {
             boolean isInTab = plugin.getTabs().stream()
                     .anyMatch(t -> t.getClocks().contains(clock.getUuid()));
             if (!isInTab) {
+                // Create a new TZClocksItemPanel for each uncategorized clock
                 TZClocksItemPanel clockPanel = new TZClocksItemPanel(plugin, clock);
                 timezonePanelsMap.put(clock, clockPanel);
 
@@ -230,11 +235,10 @@ public class TZClocksPluginPanel extends PluginPanel {
 
                 constraints.gridy++;
             }
-            constraints.gridy++;
         }
 
-        revalidate();
-        repaint();
+        clockListPanel.revalidate();
+        clockListPanel.repaint();
     }
 
 
@@ -250,7 +254,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         return availableClocks;
     }
 
-    private JPanel createMarginWrapper(JPanel panel) {
+    private JPanel createMarginWrapper(JPanel panel) { //create spacing between tabs and clocks
         JPanel marginWrapper = new JPanel(new BorderLayout());
         marginWrapper.setBorder(new EmptyBorder(5, 0, 0, 0));
         marginWrapper.add(panel, BorderLayout.NORTH);

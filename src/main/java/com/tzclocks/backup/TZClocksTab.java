@@ -1,4 +1,4 @@
-package com.tzclocks.tzdata;
+package com.tzclocks.backup;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,7 +22,7 @@ public class TZClocksTab {
 
     public TZClocksTab(String name, List<UUID> clocks) {
         this.name = name;
-        this.isCollapsed = true;
+        this.isCollapsed = true; // Collapsed by default
         this.clocks = clocks;
     }
 
