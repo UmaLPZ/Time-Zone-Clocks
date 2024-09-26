@@ -59,7 +59,7 @@ public class TZClocksDataManager {
                     Type oldItemsType = new TypeToken<ArrayList<String>>() {}.getType();
                     List<String> oldTimezoneIds = gson.fromJson(timezonesJson, oldItemsType);
                     for (String timezoneId : oldTimezoneIds) {
-                        timezoneItems.add(new TZClocksItem(UUID.randomUUID(), timezoneId, null, null));
+                        timezoneItems.add(new TZClocksItem(UUID.randomUUID(), timezoneId, null, null, null));
                     }
                 }
                 convertItems();
@@ -88,7 +88,7 @@ public class TZClocksDataManager {
         final String timezonesJson = gson.toJson(timezoneItems);
         configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY_TIMEZONES, timezonesJson);
 
-        tabsData.clear(); // Use tabsData
+        tabsData.clear();
         for (TZClocksTab tab : plugin.getTabs()) {
             List<UUID> tabClockIds = new ArrayList<>();
             for (TZClocksItem item : plugin.getTimezones()) {
@@ -105,7 +105,7 @@ public class TZClocksDataManager {
     private void convertItems() {
         List<TZClocksItem> watchItems = new ArrayList<>();
         for (TZClocksItem timezoneItem : timezoneItems) {
-            watchItems.add(new TZClocksItem(timezoneItem.getUuid(), timezoneItem.getName(), timezoneItem.getCurrentTime(), timezoneItem.getCustomName()));
+            watchItems.add(new TZClocksItem(timezoneItem.getUuid(), timezoneItem.getName(), timezoneItem.getCurrentTime(), timezoneItem.getCustomName(), timezoneItem.getShowCalendar()));
         }
         plugin.setTimezones(watchItems);
     }

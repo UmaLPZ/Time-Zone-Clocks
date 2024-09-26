@@ -22,4 +22,5 @@ public interface TZClocksConfig extends Config {
 		return TZFormatEnum.TWELVE_HOUR;
 	} //default format
 
+
 }

@@ -63,7 +63,6 @@ public class TZClocksSelectionPanel {
         centerPanel.add(topPanel, BorderLayout.NORTH);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
 
-
         JOptionPane optionPane = new JOptionPane(centerPanel);
 
         JButton okButton = new JButton(OK);

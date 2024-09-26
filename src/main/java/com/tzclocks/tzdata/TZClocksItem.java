@@ -18,4 +18,8 @@ public class TZClocksItem {
     @Getter
     @Setter
     private String customName;
+    @Getter
+    @Setter
+    private String showCalendar;
+
 }

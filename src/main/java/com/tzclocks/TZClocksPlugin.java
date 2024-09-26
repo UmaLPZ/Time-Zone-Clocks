@@ -5,11 +5,11 @@ import com.tzclocks.tzconfig.TZClocksConfig;
 import com.tzclocks.tzdata.TZClocksDataManager;
 import com.tzclocks.tzdata.TZClocksItem;
 import com.tzclocks.tzdata.TZClocksTab;
-import com.tzclocks.tzui.TZClocksTabPanel;
-import com.tzclocks.tzutilities.TZFormatEnum;
 import com.tzclocks.tzui.TZClocksItemPanel;
 import com.tzclocks.tzui.TZClocksPluginPanel;
 import com.tzclocks.tzui.TZClocksTabItemPanel;
+import com.tzclocks.tzui.TZClocksTabPanel;
+import com.tzclocks.tzutilities.TZFormatEnum;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -106,17 +107,18 @@ public class TZClocksPlugin extends Plugin {
 		return configManager.getConfig(TZClocksConfig.class);
 	}
 
+
 	public void addTimezoneToPanel(String timezoneId) {
 		clientThread.invokeLater(() -> {
 			String customName = null;
-
-
+			String showCalendar = null;
 
 			ZoneId zoneId = ZoneId.of(timezoneId);
 			ZonedDateTime now = ZonedDateTime.now(zoneId);
 			DateTimeFormatter formatter = getFormatter();
 			String currentTime = now.format(formatter);
-			TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, customName);
+
+			TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, customName, showCalendar);
 			timezones.add(newItem);
 
 			dataManager.saveData();
@@ -134,10 +136,24 @@ public class TZClocksPlugin extends Plugin {
 	public void editClockCustomName(TZClocksItem clock) {
 		String newName = JOptionPane.showInputDialog(panel, "Enter a custom name for the clock:", clock.getCustomName());
 		if (newName != null) {
-			clock.setCustomName(newName);
+			if (newName.isEmpty()) {
+				clock.setCustomName(null);
+			} else {
+				clock.setCustomName(newName);
+			}
 			dataManager.saveData();
 			SwingUtilities.invokeLater(() -> panel.updatePanel());
 		}
+	}
+	public void toggleMonthDayVisibility(TZClocksItem item) {
+			if (item.getShowCalendar() == null) {
+				item.setShowCalendar("active");
+			} else {
+				item.setShowCalendar(null);
+			}
+			dataManager.saveData();
+			SwingUtilities.invokeLater(() -> panel.updatePanel());
+
 	}
 
 	public void addTab(String tabName) {
@@ -269,6 +285,7 @@ public class TZClocksPlugin extends Plugin {
 			constraints.gridy++;
 			tabPanel.getItemsPanel().revalidate();
 			tabPanel.getItemsPanel().repaint();
+
 		}
 	}
 }

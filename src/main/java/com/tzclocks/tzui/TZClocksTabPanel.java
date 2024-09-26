@@ -63,6 +63,8 @@ public class TZClocksTabPanel extends JPanel {
         final BufferedImage expandImage = ImageUtil.loadImageResource(TZClocksPlugin.class, EXPAND_ICON_PATH);
         EXPAND_ICON = new ImageIcon(expandImage);
         EXPAND_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(expandImage, 0.53f));
+
+
     }
 
     public TZClocksTabPanel(TZClocksPlugin plugin, TZClocksPluginPanel panel, TZClocksTab tab) {

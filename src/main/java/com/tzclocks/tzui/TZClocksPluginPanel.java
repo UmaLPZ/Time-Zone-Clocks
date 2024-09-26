@@ -148,6 +148,7 @@ public class TZClocksPluginPanel extends PluginPanel {
         clockListPanel.revalidate();
         clockListPanel.repaint();
 
+
     }
 
     public void removeTimezonePanel(TZClocksItem item) {
@@ -176,15 +177,6 @@ public class TZClocksPluginPanel extends PluginPanel {
         constraints.gridy++;
         clockListPanel.revalidate();
         clockListPanel.repaint();
-    }
-
-    public void removeTabPanel(TZClocksTab tab) {
-        TZClocksTabPanel tabPanel = tabPanelsMap.remove(tab);
-        if (tabPanel != null) {
-            clockListPanel.remove(tabPanel);
-            clockListPanel.revalidate();
-            clockListPanel.repaint();
-        }
     }
 
     public Map<TZClocksItem, TZClocksItemPanel> getTimezonePanelsMap() {
@@ -230,7 +222,7 @@ public class TZClocksPluginPanel extends PluginPanel {
 
                 constraints.gridy++;
             }
-            constraints.gridy++;
+
         }
 
         revalidate();
