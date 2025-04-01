@@ -8,7 +8,7 @@ import com.tzclocks.tzdata.TZClocksTab;
 import com.tzclocks.tzui.TZClocksItemPanel;
 import com.tzclocks.tzui.TZClocksPluginPanel;
 import com.tzclocks.tzui.TZClocksTabItemPanel;
-import com.tzclocks.tzui.TZClocksTabPanel; // Keep for user tabs
+import com.tzclocks.tzui.TZClocksTabPanel;
 import com.tzclocks.tzutilities.TZFormatEnum;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
-import net.runelite.client.eventbus.Subscribe; // Import eventbus subscribe
-import net.runelite.client.events.ConfigChanged; // Import config changed event
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -32,9 +32,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap; // Import HashMap
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map; // Import Map
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,34 +48,32 @@ import static java.time.ZoneId.systemDefault;
 		name = "Time Zone Clocks"
 )
 public class TZClocksPlugin extends Plugin {
-	// Use the config group name defined in TZClocksConfig interface
-	public static final String CONFIG_GROUP = "tzconfig"; // Ensure this matches @ConfigGroup
+	public static final String CONFIG_GROUP = "tzconfig";
 
-	// Define Fixed Clock Info & Tab Name
+
 	public static final UUID LOCAL_CLOCK_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 	public static final String LOCAL_ZONE_ID = String.valueOf(systemDefault());
+	public static final String LOCAL_DISPLAY_NAME = "Mine";
 	public static final UUID JAGEX_CLOCK_UUID = UUID.fromString("00000000-0000-0000-0000-000000000002");
 	public static final String JAGEX_ZONE_ID = "Europe/London";
+	public static final String JAGEX_DISPLAY_NAME = "Jagex Time";
 	public static final String FIXED_TAB_NAME = "Game Times";
 
 	@Inject private Client client;
 	@Inject private ClientThread clientThread;
 	@Inject private ClientToolbar clientToolbar;
-	@Inject @Getter // Make config accessible via getter for panel
-	private TZClocksConfig config;
+	@Inject @Getter private TZClocksConfig config;
 	@Inject public TZClocksDataManager dataManager;
 	@Getter private TZClocksPluginPanel panel;
 	private NavigationButton navButton;
 
 	@Getter @Setter private List<TZClocksItem> timezones = new ArrayList<>();
-	@Getter @Setter private List<TZClocksTab> tabs = new ArrayList<>(); // User tabs
+	@Getter @Setter private List<TZClocksTab> tabs = new ArrayList<>();
 
-	// Map to hold references to the UI panels for fixed clocks
 	@Getter @Setter
 	private Map<TZClocksItem, TZClocksTabItemPanel> fixedSouthTabClocksMap = new HashMap<>();
 
-	// State for the fixed south tab collapse/expand
-	@Getter private boolean fixedTabCollapsed = false; // Default to expanded
+	@Getter private boolean fixedTabCollapsed = false;
 
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 	private boolean isActive;
@@ -83,24 +81,15 @@ public class TZClocksPlugin extends Plugin {
 	@Override
 	protected void startUp() throws Exception {
 		log.info("Starting Time Zone Clocks");
-		// 1. Load user data
 		dataManager.loadData();
 
-		// 2. Create fixed clock items if needed
-		if (timezones.stream().noneMatch(item -> item.getUuid().equals(LOCAL_CLOCK_UUID))) {
-			timezones.add(new TZClocksItem(LOCAL_CLOCK_UUID, LOCAL_ZONE_ID, "", "Local", null));
-		}
-		if (timezones.stream().noneMatch(item -> item.getUuid().equals(JAGEX_CLOCK_UUID))) {
-			timezones.add(new TZClocksItem(JAGEX_CLOCK_UUID, JAGEX_ZONE_ID, "", "Jagex Time", null));
-		}
 
-		// 3. Initialize the main panel
+		updateOrAddFixedClock(LOCAL_CLOCK_UUID, LOCAL_ZONE_ID, LOCAL_DISPLAY_NAME);
+		updateOrAddFixedClock(JAGEX_CLOCK_UUID, JAGEX_ZONE_ID, JAGEX_DISPLAY_NAME);
+
 		panel = injector.getInstance(TZClocksPluginPanel.class);
-
-		// 4. Build the fixed south panel UI based on initial config/state
 		SwingUtilities.invokeLater(() -> panel.initializeSouthPanel());
 
-		// 5. Setup sidebar button
 		final BufferedImage icon = ImageUtil.loadImageResource(TZClocksPlugin.class, PANEL_ICON_PATH);
 		navButton = NavigationButton.builder()
 				.tooltip("Timezones")
@@ -110,28 +99,39 @@ public class TZClocksPlugin extends Plugin {
 				.build();
 		clientToolbar.addNavigation(navButton);
 
-		// Initialize dropdowns
-		SwingUtilities.invokeLater(() -> panel.updateTimeZoneDropdown());
 
-		// 6. Update main user panel list
+		SwingUtilities.invokeLater(() -> panel.updateDropdowns());
+
 		SwingUtilities.invokeLater(() -> panel.updatePanel());
 
-		// 7. Start scheduler
 		scheduler.scheduleAtFixedRate(this::updateTimezoneData, 0, 1, TimeUnit.SECONDS);
 		isActive = true;
 	}
 
+
+	private void updateOrAddFixedClock(UUID uuid, String zoneId, String displayName) {
+		TZClocksItem existing = timezones.stream().filter(item -> item.getUuid().equals(uuid)).findFirst().orElse(null);
+		if (existing == null) {
+			timezones.add(new TZClocksItem(uuid, zoneId, "", displayName, null, displayName));
+		} else {
+
+			existing.setName(zoneId);
+			existing.setDisplayName(displayName);
+
+			if (existing.getCustomName() == null || existing.getCustomName().trim().isEmpty()) {
+				existing.setCustomName(displayName);
+			}
+		}
+	}
+
+
 	@Override
 	protected void shutDown() {
 		log.info("Stopping Time Zone Clocks");
-		clientToolbar.removeNavigation(navButton);
-		dataManager.saveData(); // Save user data
-		scheduler.shutdown();
-		isActive = false;
-		panel = null;
-		fixedSouthTabClocksMap.clear();
-		timezones.clear();
-		tabs.clear();
+		if (dataManager != null) { dataManager.saveData(); }
+		if (clientToolbar != null && navButton != null) { clientToolbar.removeNavigation(navButton); }
+		if (scheduler != null && !scheduler.isShutdown()) { scheduler.shutdown(); }
+		isActive = false; panel = null; fixedSouthTabClocksMap.clear(); timezones.clear(); tabs.clear();
 	}
 
 	@Provides
@@ -140,263 +140,160 @@ public class TZClocksPlugin extends Plugin {
 	}
 
 	/**
-	 * Handles configuration changes, specifically for showing/hiding the fixed tab.
+	 * Handles configuration changes.
 	 */
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event) {
 		if (!event.getGroup().equals(CONFIG_GROUP)) { return; }
 
-		// If fixed tab visibility changed, rebuild south panel
+
 		if (event.getKey().equals("showFixedGameTimesTab")) {
 			log.debug("Config changed for showFixedGameTimesTab, rebuilding south panel.");
 			if (panel != null) {
 				SwingUtilities.invokeLater(() -> {
 					panel.initializeSouthPanel();
-					panel.revalidate(); // Revalidate main panel in case south panel appeared/disappeared
-					panel.repaint();
+					panel.revalidate(); panel.repaint();
 				});
 			}
 		}
-		// Potentially handle time format change if needed (e.g., trigger immediate update)
-		// if (event.getKey().equals("tzFormat")) { ... }
+
+
+		if (event.getKey().equals("timezoneSourceMode")) {
+			log.debug("Config changed for timezoneSourceMode, updating dropdowns.");
+			if (panel != null) {
+
+				SwingUtilities.invokeLater(() -> panel.updateDropdowns());
+			}
+		}
+
+
+		if (event.getKey().equals("tzFormat")) {
+
+
+			updateTimezoneData();
+		}
 	}
 
 
-	// --- User/Fixed Action Methods ---
 
-	public void addTimezoneToPanel(String timezoneId) {
-		if (timezoneId.equals(LOCAL_ZONE_ID) || timezoneId.equals(JAGEX_ZONE_ID)) {
-			log.warn("Attempted to add fixed timezone {} via user action.", timezoneId);
-			SwingUtilities.invokeLater(() ->
-					JOptionPane.showMessageDialog(panel, timezoneId + " is already shown in the Game Times panel.", "Clock Exists", JOptionPane.INFORMATION_MESSAGE)
-			);
-			return;
+
+
+	public void addTimezoneToPanel(String zoneIdString, String displayName) {
+		if (zoneIdString.equals(LOCAL_ZONE_ID) || zoneIdString.equals(JAGEX_ZONE_ID)) {
+			log.warn("Attempted to add fixed timezone {} via addTimezoneToPanel.", zoneIdString);
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(panel, zoneIdString + " is already shown in the Game Times panel.", "Clock Exists", JOptionPane.INFORMATION_MESSAGE) ); return;
 		}
-		boolean alreadyExists = timezones.stream()
-				.anyMatch(item -> item.getName().equalsIgnoreCase(timezoneId) &&
-						!item.getUuid().equals(LOCAL_CLOCK_UUID) &&
-						!item.getUuid().equals(JAGEX_CLOCK_UUID));
-		if (alreadyExists) {
-			SwingUtilities.invokeLater(() ->
-					JOptionPane.showMessageDialog(panel, timezoneId + " has already been added.", "Clock Exists", JOptionPane.INFORMATION_MESSAGE)
-			);
-			return;
-		}
+		boolean alreadyExists = timezones.stream().anyMatch(item -> item.getName().equalsIgnoreCase(zoneIdString) && !item.getUuid().equals(LOCAL_CLOCK_UUID) && !item.getUuid().equals(JAGEX_CLOCK_UUID));
+		if (alreadyExists) { SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(panel, displayName + " (" + zoneIdString + ") has already been added.", "Clock Exists", JOptionPane.INFORMATION_MESSAGE) ); return; }
+
 		clientThread.invokeLater(() -> {
 			String customName = null; String showCalendar = null;
 			try {
-				ZoneId zoneId = ZoneId.of(timezoneId);
-				ZonedDateTime now = ZonedDateTime.now(zoneId);
-				DateTimeFormatter formatter = getFormatter();
-				String currentTime = now.format(formatter);
-				TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), timezoneId, currentTime, customName, showCalendar);
-				timezones.add(newItem);
-				dataManager.saveData();
-				SwingUtilities.invokeLater(() -> panel.updatePanel());
-			} catch (Exception e) {
-				log.error("Failed to add timezone: {}", timezoneId, e);
-				SwingUtilities.invokeLater(() ->
-						JOptionPane.showMessageDialog(panel, "Failed to add timezone: " + timezoneId, "Error", JOptionPane.ERROR_MESSAGE)
-				);
-			}
+				ZoneId zoneId = ZoneId.of(zoneIdString); ZonedDateTime now = ZonedDateTime.now(zoneId);
+				DateTimeFormatter formatter = getFormatter(); String currentTime = now.format(formatter);
+				TZClocksItem newItem = new TZClocksItem(UUID.randomUUID(), zoneIdString, currentTime, customName, showCalendar, displayName);
+				timezones.add(newItem); dataManager.saveData(); SwingUtilities.invokeLater(() -> panel.updatePanel());
+			} catch (Exception e) { log.error("Failed to add timezone: {}", zoneIdString, e); SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(panel, "Failed to add timezone: " + zoneIdString, "Error", JOptionPane.ERROR_MESSAGE) ); }
 		});
 	}
 
 	public void removeTimezoneFromPanel(TZClocksItem item) {
-		if (item.getUuid().equals(LOCAL_CLOCK_UUID) || item.getUuid().equals(JAGEX_CLOCK_UUID)) {
-			log.warn("Attempted to remove fixed timezone item {} via user action.", item.getName()); return;
-		}
-		timezones.remove(item);
-		removeClockFromUserTab(item);
-		dataManager.saveData();
-		SwingUtilities.invokeLater(() -> panel.updatePanel());
+		if (item.getUuid().equals(LOCAL_CLOCK_UUID) || item.getUuid().equals(JAGEX_CLOCK_UUID)) { log.warn("Attempted to remove fixed timezone item {} via user action.", item.getName()); return; }
+		timezones.remove(item); removeClockFromUserTab(item); dataManager.saveData(); SwingUtilities.invokeLater(() -> panel.updatePanel());
 	}
 
 	public void editClockCustomName(TZClocksItem clock) {
-		String currentName = clock.getCustomName() != null ? clock.getCustomName() : "";
-		String newName = JOptionPane.showInputDialog(panel, "Enter a custom name for the clock:", currentName);
+		String currentEditName = clock.getCustomName() != null ? clock.getCustomName() : clock.getDisplayName();
+		String newName = JOptionPane.showInputDialog(panel, "Enter a custom name for the clock (blank to reset):", currentEditName);
 		if (newName != null) {
-			if (newName.trim().isEmpty()) {
-				if (clock.getUuid().equals(LOCAL_CLOCK_UUID)) { clock.setCustomName("UTC"); }
-				else if (clock.getUuid().equals(JAGEX_CLOCK_UUID)) { clock.setCustomName("Game Time"); }
-				else { clock.setCustomName(null); }
-			} else { clock.setCustomName(newName.trim()); }
+			if (newName.trim().isEmpty()) { clock.setCustomName(null); }
+			else { clock.setCustomName(newName.trim()); }
 
 			if (!clock.getUuid().equals(LOCAL_CLOCK_UUID) && !clock.getUuid().equals(JAGEX_CLOCK_UUID)) { dataManager.saveData(); }
 
 			SwingUtilities.invokeLater(() -> {
-				panel.updatePanel(); // Update user panel
-				// Rebuild south panel if a fixed clock name was involved
-				if (fixedSouthTabClocksMap != null && (clock.getUuid().equals(LOCAL_CLOCK_UUID) || clock.getUuid().equals(JAGEX_CLOCK_UUID))) {
-					panel.initializeSouthPanel();
-				}
+				panel.updatePanel();
+				if (fixedSouthTabClocksMap != null && (clock.getUuid().equals(LOCAL_CLOCK_UUID) || clock.getUuid().equals(JAGEX_CLOCK_UUID))) { panel.initializeSouthPanel(); }
 			});
 		}
 	}
 
 	public void toggleMonthDayVisibility(TZClocksItem item) {
-		if (item.getShowCalendar() == null) { item.setShowCalendar("active"); }
-		else { item.setShowCalendar(null); }
-
+		if (item.getShowCalendar() == null) { item.setShowCalendar("active"); } else { item.setShowCalendar(null); }
 		if (!item.getUuid().equals(LOCAL_CLOCK_UUID) && !item.getUuid().equals(JAGEX_CLOCK_UUID)) { dataManager.saveData(); }
-
 		SwingUtilities.invokeLater(() -> {
-			panel.updatePanel(); // Update user panel
-			// Rebuild south panel if a fixed clock visibility changed
-			if (fixedSouthTabClocksMap != null && (item.getUuid().equals(LOCAL_CLOCK_UUID) || item.getUuid().equals(JAGEX_CLOCK_UUID))) {
-				panel.initializeSouthPanel();
-			}
+			panel.updatePanel();
+			if (fixedSouthTabClocksMap != null && (item.getUuid().equals(LOCAL_CLOCK_UUID) || item.getUuid().equals(JAGEX_CLOCK_UUID))) { panel.initializeSouthPanel(); }
 		});
 	}
 
 	public void addTab(String tabName) {
-		if (tabName.equalsIgnoreCase(FIXED_TAB_NAME)) {
-			log.warn("Attempted to add user tab with reserved name '{}'.", FIXED_TAB_NAME);
-			SwingUtilities.invokeLater(() ->
-					JOptionPane.showMessageDialog(panel, "Cannot use the reserved tab name '"+FIXED_TAB_NAME+"'.", "Reserved Name", JOptionPane.WARNING_MESSAGE)
-			); return;
-		}
+		if (tabName.equalsIgnoreCase(FIXED_TAB_NAME)) { log.warn("Attempted to add user tab with reserved name '{}'.", FIXED_TAB_NAME); SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(panel, "Cannot use the reserved tab name '"+FIXED_TAB_NAME+"'.", "Reserved Name", JOptionPane.WARNING_MESSAGE) ); return; }
 		boolean nameExists = tabs.stream().anyMatch(tab -> tab.getName().equalsIgnoreCase(tabName));
-		if (nameExists) {
-			SwingUtilities.invokeLater(() ->
-					JOptionPane.showMessageDialog(panel, "A tab with the name '" + tabName + "' already exists.", "Name Exists", JOptionPane.WARNING_MESSAGE)
-			); return;
-		}
-		clientThread.invokeLater(() -> {
-			tabs.add(new TZClocksTab(tabName, new ArrayList<>()));
-			dataManager.saveData();
-			SwingUtilities.invokeLater(() -> panel.updatePanel());
-		});
+		if (nameExists) { SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(panel, "A tab with the name '" + tabName + "' already exists.", "Name Exists", JOptionPane.WARNING_MESSAGE) ); return; }
+		clientThread.invokeLater(() -> { tabs.add(new TZClocksTab(tabName, new ArrayList<>())); dataManager.saveData(); SwingUtilities.invokeLater(() -> panel.updatePanel()); });
 	}
 
 	public void editTab(TZClocksTab tab) {
 		String newName = JOptionPane.showInputDialog(panel, "Enter the name for this tab (30 chars max).", tab.getName());
 		if (newName == null || newName.trim().isEmpty()) { return; }
-		newName = newName.trim();
-		if (newName.length() > 30) { newName = newName.substring(0, 30); }
-
-		if (newName.equalsIgnoreCase(FIXED_TAB_NAME)) {
-			SwingUtilities.invokeLater(() ->
-					JOptionPane.showMessageDialog(panel, "Cannot use the reserved tab name '"+FIXED_TAB_NAME+"'.", "Reserved Name", JOptionPane.WARNING_MESSAGE)
-			); return;
-		}
-		String finalNewName = newName;
-		boolean nameExists = tabs.stream()
-				.filter(t -> t != tab)
-				.anyMatch(t -> t.getName().equalsIgnoreCase(finalNewName));
-		if (nameExists) {
-			SwingUtilities.invokeLater(() ->
-					JOptionPane.showMessageDialog(panel, "Another tab with the name '" + finalNewName + "' already exists.", "Name Exists", JOptionPane.WARNING_MESSAGE)
-			); return;
-		}
-		if (!tab.getName().equals(newName)) {
-			tab.setName(newName);
-			dataManager.saveData();
-			SwingUtilities.invokeLater(() -> panel.updatePanel());
-		}
+		newName = newName.trim(); if (newName.length() > 30) { newName = newName.substring(0, 30); }
+		if (newName.equalsIgnoreCase(FIXED_TAB_NAME)) { SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(panel, "Cannot use the reserved tab name '"+FIXED_TAB_NAME+"'.", "Reserved Name", JOptionPane.WARNING_MESSAGE) ); return; }
+		String finalNewName = newName; boolean nameExists = tabs.stream().filter(t -> t != tab).anyMatch(t -> t.getName().equalsIgnoreCase(finalNewName));
+		if (nameExists) { SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(panel, "Another tab with the name '" + finalNewName + "' already exists.", "Name Exists", JOptionPane.WARNING_MESSAGE) ); return; }
+		if (!tab.getName().equals(newName)) { tab.setName(newName); dataManager.saveData(); SwingUtilities.invokeLater(() -> panel.updatePanel()); }
 	}
 
-	public void removeTab(TZClocksTab tab) {
-		tabs.remove(tab);
-		dataManager.saveData();
-		SwingUtilities.invokeLater(() -> panel.updatePanel());
-	}
+	public void removeTab(TZClocksTab tab) { tabs.remove(tab); dataManager.saveData(); SwingUtilities.invokeLater(() -> panel.updatePanel()); }
 
-	/**
-	 * Handles expand/collapse actions for both user tabs and the fixed south tab.
-	 */
 	public void switchTabExpandCollapse(String tabName) {
-		// Check if it's the fixed tab by name
-		if (tabName.equalsIgnoreCase(FIXED_TAB_NAME)) {
-			fixedTabCollapsed = !fixedTabCollapsed; // Toggle plugin's state tracker
-			if (panel != null) {
-				SwingUtilities.invokeLater(() -> panel.initializeSouthPanel()); // Rebuild south panel UI
-			}
-		} else {
-			// Find the user tab by name and toggle its state
-			tabs.stream()
-					.filter(t -> t.getName().equalsIgnoreCase(tabName))
-					.findFirst()
-					.ifPresent(userTab -> {
-						userTab.setCollapsed(!userTab.isCollapsed());
-						dataManager.saveData(); // Save state for user tabs
-						if (panel != null) {
-							SwingUtilities.invokeLater(() -> panel.updatePanel()); // Rebuild user panel UI
-						}
-					});
+		if (tabName.equalsIgnoreCase(FIXED_TAB_NAME)) { fixedTabCollapsed = !fixedTabCollapsed; if (panel != null) { SwingUtilities.invokeLater(() -> panel.initializeSouthPanel()); } }
+		else { tabs.stream().filter(t -> t.getName().equalsIgnoreCase(tabName)).findFirst().ifPresent(userTab -> { userTab.setCollapsed(!userTab.isCollapsed()); dataManager.saveData(); if (panel != null) { SwingUtilities.invokeLater(() -> panel.updatePanel()); } }); }
+	}
+
+	public void removeClockFromUserTab(TZClocksItem clock) { for (TZClocksTab tab : tabs) {
+		if (tab.getClocks() != null && tab.getClocks().contains(clock.getUuid())) {
+			tab.removeClock(clock.getUuid()); dataManager.saveData(); if (panel != null) { SwingUtilities.invokeLater(() -> panel.updatePanel()); } break; }
 		}
 	}
 
-	/**
-	 * Removes a clock from any USER tab it might be in.
-	 */
-	public void removeClockFromUserTab(TZClocksItem clock) {
-		for (TZClocksTab tab : tabs) { // Iterate only user tabs
-			if (tab.getClocks() != null && tab.getClocks().contains(clock.getUuid())) {
-				tab.removeClock(clock.getUuid());
-				break;
-			}
-		}
-	}
-
-	/**
-	 * Adds a clock to a specific USER tab.
-	 */
 	public void addClockToUserTab(TZClocksItem clock, TZClocksTab tab) {
 		if (tabs.contains(tab) && !clock.getUuid().equals(LOCAL_CLOCK_UUID) && !clock.getUuid().equals(JAGEX_CLOCK_UUID)) {
 			removeClockFromUserTab(clock);
-			if (tab.getClocks() != null) { tab.addClock(clock.getUuid()); }
-			else { log.error("Target user tab '{}' has null clock list!", tab.getName()); }
-			dataManager.saveData();
-			if (panel != null) { SwingUtilities.invokeLater(() -> panel.updatePanel()); }
+			if (tab.getClocks() != null) { tab.addClock(clock.getUuid()); } else { log.error("Target user tab '{}' has null clock list!", tab.getName()); }
+			dataManager.saveData(); if (panel != null) { SwingUtilities.invokeLater(() -> panel.updatePanel()); }
 		} else { log.warn("Attempted invalid addClockToUserTab operation. Clock: {}, Tab: {}", clock.getName(), tab.getName()); }
 	}
 
-	// --- Time Update Logic ---
+
 	public void updateTimezoneData() {
 		DateTimeFormatter formatter = getFormatter();
-		boolean showFixedTab = config.showFixedGameTimesTab(); // Check config once
+		boolean showFixedTab = config.showFixedGameTimesTab();
 
 		for (TZClocksItem item : timezones) {
 			try {
 				ZoneId zoneId = ZoneId.of(item.getName());
-				ZonedDateTime now = ZonedDateTime.now(zoneId);
-				String currentTime = now.format(formatter);
-				item.setCurrentTime(currentTime);
-
+				ZonedDateTime now = ZonedDateTime.now(zoneId); String currentTime = now.format(formatter); item.setCurrentTime(currentTime);
 				SwingUtilities.invokeLater(() -> {
 					boolean updated = false;
-					// 1. Check Fixed South Panel Map (if config allows AND not collapsed)
-					if (showFixedTab && !fixedTabCollapsed &&
-							(item.getUuid().equals(LOCAL_CLOCK_UUID) || item.getUuid().equals(JAGEX_CLOCK_UUID)))
-					{
+					if (showFixedTab && !fixedTabCollapsed && (item.getUuid().equals(LOCAL_CLOCK_UUID) || item.getUuid().equals(JAGEX_CLOCK_UUID))) {
 						TZClocksTabItemPanel southItemPanel = fixedSouthTabClocksMap.get(item);
-						if (southItemPanel != null) {
-							southItemPanel.updateTime();
-							updated = true;
-						} else { log.trace("South panel item not found in map for fixed clock {}", item.getName()); }
+						if (southItemPanel != null) { southItemPanel.updateTime(); updated = true; }
+						else { log.trace("South panel item not found in map for fixed clock {}", item.getName()); }
 					}
-					// 2. Check User Standalone Clocks Map
 					if (!updated && panel != null) {
 						TZClocksItemPanel clockPanel = panel.getTimezonePanelsMap().get(item);
-						if (clockPanel != null) {
-							clockPanel.updateTime();
-							updated = true;
-						}
+						if (clockPanel != null) { clockPanel.updateTime(); updated = true; }
 					}
-					// 3. Check User Tabs Map
 					if (!updated && panel != null) {
 						for (TZClocksTab userTab : tabs) {
 							if (!userTab.isCollapsed() && userTab.getClocks() != null && userTab.getClocks().contains(item.getUuid())) {
 								TZClocksTabPanel userTabPanel = panel.getTabPanelsMap().get(userTab);
 								if (userTabPanel != null) {
 									TZClocksTabItemPanel userTabItemPanel = userTabPanel.getTabItemPanelsMap().get(item);
-									if (userTabItemPanel != null) {
-										userTabItemPanel.updateTime();
-										updated = true;
-									} else { log.trace("User tab item panel not found in map for clock {} in tab {}", item.getName(), userTab.getName()); }
-								} else { log.trace("User tab panel not found in map for tab {}", userTab.getName()); }
-								break;
+									if (userTabItemPanel != null) { userTabItemPanel.updateTime(); updated = true; }
+									else { log.trace("User tab item panel not found in map for clock {} in tab {}", item.getName(), userTab.getName()); }
+								} else { log.trace("User tab panel not found in map for tab {}", userTab.getName()); } break;
 							}
 						}
 					}
@@ -405,12 +302,9 @@ public class TZClocksPlugin extends Plugin {
 		}
 	}
 
-	/**
-	 * Gets the appropriate DateTimeFormatter based on user configuration.
-	 */
 	public DateTimeFormatter getFormatter() {
 		if (config != null && config.getTZFormatMode() == TZFormatEnum.TWENTY_FOUR_HOUR) {
 			return DateTimeFormatter.ofPattern("HH:mm:ss");
-		} else { return DateTimeFormatter.ofPattern("hh:mm:ss a"); } // Default to 12-hour
+		} else { return DateTimeFormatter.ofPattern("hh:mm:ss a"); }
 	}
 }

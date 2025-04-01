@@ -10,7 +10,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener; // Import MouseListener
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -18,6 +18,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static com.tzclocks.tzutilities.TZConstants.*;
+import static javax.swing.BorderFactory.createEmptyBorder;
+import static javax.swing.BorderFactory.createRaisedBevelBorder;
 
 public class TZClocksTabItemPanel extends JPanel {
     private static final String DELETE_TITLE = "Remove Clock";
@@ -38,19 +40,19 @@ public class TZClocksTabItemPanel extends JPanel {
     private final JLabel customNameLabel;
     private final JLabel dayMonthLabel;
     private final JPanel calendarPanel;
-    private final JPanel timePanel; // Holds icon + time + optional date
+    private final JPanel timePanel;
     private final TZClocksPlugin plugin;
-    // Keep references to icon labels
+
     private final JLabel toggleIconLabel;
     private final JLabel editButton;
     private final JLabel deleteButton;
-    // Placeholder for layout stability when buttons hidden
+
     private final JLabel editPlaceholder;
     private final JLabel deletePlaceholder;
 
 
     static {
-        // Icon loading remains the same
+
         final int ICON_SIZE = 10;
         final float ALPHA_HOVER = 0.53f;
 
@@ -79,69 +81,70 @@ public class TZClocksTabItemPanel extends JPanel {
     public TZClocksTabItemPanel(TZClocksPlugin plugin, TZClocksItem item) {
         this.plugin = plugin;
         this.item = item;
-        // Main layout: Details CENTER, Actions EAST
-        setLayout(new BorderLayout(5, 0)); // Keep 5px gap
-        setBorder(new EmptyBorder(1, 5, 3, 0)); // Keep original border
+
+        setLayout(new BorderLayout(5, 0));
+        setBorder(BorderFactory.createCompoundBorder(createRaisedBevelBorder(), createEmptyBorder(3,5,5,5)));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
         setOpaque(true);
 
-        // --- Details Panel (CENTER) ---
+
         JPanel detailsPanel = new JPanel(new GridBagLayout());
         detailsPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1.0; gbc.anchor = GridBagConstraints.WEST;
 
-        // Initialize Name Labels
+
         customNameLabel = new JLabel();
         customNameLabel.setForeground(Color.WHITE);
 
-        timezoneNameLabel = new JLabel(item.getName());
+        timezoneNameLabel = new JLabel(truncateString(item.getDisplayName(),20));
         timezoneNameLabel.setForeground(Color.WHITE);
+        timezoneNameLabel.setToolTipText(item.getDisplayName());
         JPanel namePanel = new JPanel(new BorderLayout(5, 0));
         namePanel.setOpaque(false);
         namePanel.add(new JLabel(GLOBE_ICON), BorderLayout.WEST);
         namePanel.add(timezoneNameLabel, BorderLayout.CENTER);
 
-        // Initialize Time/Date Components
+
         currentTimeLabel = new JLabel(item.getCurrentTime());
         currentTimeLabel.setForeground(Color.WHITE);
 
         dayMonthLabel = new JLabel();
         dayMonthLabel.setForeground(Color.WHITE);
-        calendarPanel = new JPanel(new BorderLayout(0, 0)); // Icon + Date
+        calendarPanel = new JPanel(new BorderLayout(0, 0));
         calendarPanel.setOpaque(false);
         calendarPanel.add(new JLabel(CALENDAR_ICON), BorderLayout.WEST);
         calendarPanel.add(dayMonthLabel, BorderLayout.CENTER);
 
-        // --- Time Panel (Holds Icon + Time + Optional Date) using BorderLayout ---
-        timePanel = new JPanel(new BorderLayout(5, 0)); // Hgap between icon/time and date
+
+        timePanel = new JPanel(new BorderLayout(5, 0));
         timePanel.setOpaque(false);
         JPanel clockIconAndTimePanel = new JPanel(new BorderLayout(5,0));
         clockIconAndTimePanel.setOpaque(false);
         clockIconAndTimePanel.add(new JLabel(CLOCK_ICON), BorderLayout.WEST);
         clockIconAndTimePanel.add(currentTimeLabel, BorderLayout.CENTER);
-        timePanel.add(clockIconAndTimePanel, BorderLayout.CENTER); // Time goes in center
-        // calendarPanel is added dynamically to BorderLayout.EAST
+        timePanel.add(clockIconAndTimePanel, BorderLayout.CENTER);
 
-        // --- Action Panel (EAST - Apply GridLayout) ---
-        // Use GridLayout(1 row, 3 columns) with 3px horizontal gap
+
+
+
         JPanel actionPanel = new JPanel(new GridLayout(1, 3, 3, 0));
         actionPanel.setOpaque(false);
-        actionPanel.setBorder(new EmptyBorder(0, 0, 0, 3)); // Padding on the far right
+        actionPanel.setBorder(new EmptyBorder(0, 0, 0, 3));
 
-        // --- Create Buttons and Placeholders ---
-        toggleIconLabel = new JLabel(TOGGLE_ICON, SwingConstants.CENTER); // Center align icon
-        // Listener added below
 
-        editButton = new JLabel(EDIT_ICON, SwingConstants.CENTER); // Center align icon
-        // Listener added conditionally below
+        toggleIconLabel = new JLabel(TOGGLE_ICON, SwingConstants.CENTER);
 
-        deleteButton = new JLabel(DELETE_ICON, SwingConstants.CENTER); // Center align icon
-        // Listener added conditionally below
 
-        // Create empty placeholders to maintain column width
-        Dimension placeholderSize = new Dimension(EDIT_ICON.getIconWidth(), EDIT_ICON.getIconHeight()); // Use icon size
+        editButton = new JLabel(EDIT_ICON, SwingConstants.CENTER);
+
+
+        deleteButton = new JLabel(DELETE_ICON, SwingConstants.CENTER);
+
+
+
+        Dimension placeholderSize = new Dimension(EDIT_ICON.getIconWidth(), EDIT_ICON.getIconHeight());
         editPlaceholder = new JLabel();
         editPlaceholder.setPreferredSize(placeholderSize);
         editPlaceholder.setMinimumSize(placeholderSize);
@@ -150,9 +153,9 @@ public class TZClocksTabItemPanel extends JPanel {
         deletePlaceholder.setMinimumSize(placeholderSize);
 
 
-        // --- Add Components to actionPanel based on logic ---
+
         if (!isFixedClock()) {
-            // Add Toggle Button and Listener (always present conceptually, add listener here)
+
             toggleIconLabel.setToolTipText("Toggle Calendar");
             toggleIconLabel.addMouseListener(new MouseAdapter() {
                 @Override public void mousePressed(MouseEvent e) { plugin.toggleMonthDayVisibility(item); }
@@ -161,29 +164,29 @@ public class TZClocksTabItemPanel extends JPanel {
             });
 
 
-            // Add Edit Button and Listener
-            editButton.setToolTipText("Edit custom name"); // Ensure tooltip is set
-            editButton.addMouseListener(new MouseAdapter() { // Add listener
+
+            editButton.setToolTipText("Edit custom name");
+            editButton.addMouseListener(new MouseAdapter() {
                 @Override public void mousePressed(MouseEvent e) { plugin.editClockCustomName(item); }
                 @Override public void mouseEntered(MouseEvent e) { editButton.setIcon(EDIT_HOVER_ICON); }
                 @Override public void mouseExited(MouseEvent e) { editButton.setIcon(EDIT_ICON); }
             });
 
-            // Add Delete Button and Listener
-            deleteButton.setToolTipText("Remove from tab"); // Ensure tooltip is set
-            deleteButton.addMouseListener(new MouseAdapter() { // Add listener
+
+            deleteButton.setToolTipText("Remove from tab");
+            deleteButton.addMouseListener(new MouseAdapter() {
                 @Override public void mousePressed(MouseEvent e) { if (deleteConfirm()) plugin.removeClockFromUserTab(item); }
                 @Override public void mouseEntered(MouseEvent e) { deleteButton.setIcon(DELETE_HOVER_ICON); }
                 @Override public void mouseExited(MouseEvent e) { deleteButton.setIcon(DELETE_ICON); }
             });
 
-            // Add in Toggle, Edit, Delete order for non-fixed clocks
-            actionPanel.add(toggleIconLabel); // Column 1
-            actionPanel.add(editButton);      // Column 2
-            actionPanel.add(deleteButton);    // Column 3
+
+            actionPanel.add(toggleIconLabel);
+            actionPanel.add(editButton);
+            actionPanel.add(deleteButton);
         } else {
-            // Fixed clock: Only toggle is active
-            // Add Toggle Button and Listener
+
+
             toggleIconLabel.setToolTipText("Toggle Calendar");
             toggleIconLabel.addMouseListener(new MouseAdapter() {
                 @Override public void mousePressed(MouseEvent e) { plugin.toggleMonthDayVisibility(item); }
@@ -191,41 +194,41 @@ public class TZClocksTabItemPanel extends JPanel {
                 @Override public void mouseExited(MouseEvent e) { toggleIconLabel.setIcon(TOGGLE_ICON); }
             });
 
-            // Ensure tooltips are null for inactive buttons
+
             editButton.setToolTipText(null);
             deleteButton.setToolTipText(null);
-            // Remove listeners just in case they were somehow added before
+
             for(MouseListener ml : editButton.getMouseListeners()){ editButton.removeMouseListener(ml); }
             for(MouseListener ml : deleteButton.getMouseListeners()){ deleteButton.removeMouseListener(ml); }
 
-            // Add placeholders first, then the toggle icon in the last slot
-            actionPanel.add(editPlaceholder);    // Column 1 (Placeholder)
-            actionPanel.add(deletePlaceholder);  // Column 2 (Placeholder)
-            actionPanel.add(toggleIconLabel);    // Column 3 (Toggle Icon)
+
+            actionPanel.add(editPlaceholder);
+            actionPanel.add(deletePlaceholder);
+            actionPanel.add(toggleIconLabel);
         }
 
-        // --- NEW: Wrapper Panel for Top Alignment ---
+
         JPanel eastWrapperPanel = new JPanel(new BorderLayout());
         eastWrapperPanel.setOpaque(false);
-        eastWrapperPanel.setBorder(new EmptyBorder(0, 0, 0, 3)); // Padding on right
-        eastWrapperPanel.add(actionPanel, BorderLayout.NORTH); // Add actionPanel to top of wrapper
+        eastWrapperPanel.setBorder(new EmptyBorder(0, 0, 0, 3));
+        eastWrapperPanel.add(actionPanel, BorderLayout.NORTH);
 
-        // Add main panels to this component
+
         add(detailsPanel, BorderLayout.CENTER);
-        add(eastWrapperPanel, BorderLayout.EAST); // Add the WRAPPER to the main EAST
+        add(eastWrapperPanel, BorderLayout.EAST);
 
-        // Initial UI state setup
-        updateCustomName(detailsPanel, gbc, namePanel); // Lays out names and adds timePanel
-        toggleMonthDayVisibility(); // Adds/removes calendarPanel from timePanel
+
+        updateCustomName(detailsPanel, gbc, namePanel);
+        toggleMonthDayVisibility();
     }
 
-    // isFixedClock remains the same
+
     private boolean isFixedClock() {
         return item.getUuid().equals(TZClocksPlugin.LOCAL_CLOCK_UUID) ||
                 item.getUuid().equals(TZClocksPlugin.JAGEX_CLOCK_UUID);
     }
 
-    // updateCustomName remains the same
+
     private void updateCustomName(JPanel detailsPanel, GridBagConstraints gbc, JPanel namePanel) {
         detailsPanel.removeAll();
         if (item.getCustomName() != null && !item.getCustomName().isEmpty()) {
@@ -243,7 +246,7 @@ public class TZClocksTabItemPanel extends JPanel {
         detailsPanel.repaint();
     }
 
-    // toggleMonthDayVisibility remains the same (operates on timePanel)
+
     private void toggleMonthDayVisibility() {
         boolean calendarVisible = false;
         for (Component comp : timePanel.getComponents()) {
@@ -261,21 +264,21 @@ public class TZClocksTabItemPanel extends JPanel {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd");
                 dayMonthLabel.setText(currentDate.format(formatter));
             } catch (Exception e) { dayMonthLabel.setText("?? ??"); }
-            // Add calendarPanel to EAST of timePanel
+
             timePanel.add(calendarPanel, BorderLayout.EAST);
         }
         timePanel.revalidate();
         timePanel.repaint();
     }
 
-    // deleteConfirm remains the same
+
     private boolean deleteConfirm() {
         int confirm = JOptionPane.showConfirmDialog(this,
                 DELETE_MESSAGE, DELETE_TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         return confirm == JOptionPane.YES_OPTION;
     }
 
-    // updateTime remains the same
+
     public void updateTime() {
         currentTimeLabel.setText(item.getCurrentTime());
         if (item.getShowCalendar() != null) {
@@ -295,4 +298,5 @@ public class TZClocksTabItemPanel extends JPanel {
             }
         }
     }
+
 }

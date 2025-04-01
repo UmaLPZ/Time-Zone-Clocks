@@ -3,7 +3,7 @@ package com.tzclocks.tzutilities;
 public final class TZConstants {
     private TZConstants()
     {
-        // restrict instantiation
+
     }
 
     public static final String PANEL_ICON_PATH = "/tzpanelicon.png";
@@ -17,5 +17,12 @@ public final class TZConstants {
     public static final String CLOCK_ICON_PATH = "/tzclockicon.png";
     public static final String CALENDAR_ICON_PATH = "/tzcalendaricon.png";
     public static final String TOGGLE_ICON_PATH = "/tzcalbuttonicon.png";
+
+    public static String truncateString(String string, int length) {
+        if (string.length() > length) {
+            return string.substring(0, length) + "...";
+        }
+        return string;
+    }
 
 }
