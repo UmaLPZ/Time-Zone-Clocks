@@ -1,26 +1,62 @@
 package com.tzclocks.tzconfig;
 
-import java.util.List;
-
 import com.tzclocks.TZClocksPlugin;
 import com.tzclocks.tzutilities.TZFormatEnum;
+import com.tzclocks.tzutilities.TZSourceMode;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
-
+import net.runelite.client.config.ConfigSection;
 
 @ConfigGroup(TZClocksPlugin.CONFIG_GROUP)
 public interface TZClocksConfig extends Config {
-		//format dropdown
-		@ConfigItem(
+
+
+	@ConfigSection(
+			name = "Display",
+			description = "Clock display settings",
+			position = 0
+	)
+	String displaySection = "display";
+
+	@ConfigItem(
 			position = 1,
 			keyName = "tzFormat",
 			name = "Time Format",
-			description = "Select 12-hour or 24-hour format"
+			description = "Select 12-hour or 24-hour format",
+			section = displaySection
 	)
 	default TZFormatEnum getTZFormatMode() {
 		return TZFormatEnum.TWELVE_HOUR;
-	} //default format
+	}
+
+	@ConfigItem(
+			position = 2,
+			keyName = "showFixedGameTimesTab",
+			name = "Show Game Times Tab",
+			description = "Shows/hides the fixed 'Game Times' tab (UTC, Server Time) at the bottom.",
+			section = displaySection
+	)
+	default boolean showFixedGameTimesTab() {
+		return true;
+	}
+
+	@ConfigSection(
+			name = "Timezone Source",
+			description = "How timezones are selected in the panel",
+			position = 3
+	)
+	String sourceSection = "source";
 
 
+	@ConfigItem(
+			position = 4,
+			keyName = "timezoneSourceMode",
+			name = "Selection Mode",
+			description = "Choose how to select timezones: by region/city or by abbreviation/offset.",
+			section = sourceSection
+	)
+	default TZSourceMode getTimezoneSourceMode() {
+		return TZSourceMode.REGIONAL;
+	}
 }

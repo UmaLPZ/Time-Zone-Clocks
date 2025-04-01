@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+import static com.tzclocks.tzutilities.TZConstants.truncateString;
+
 
 public class TZClocksSelectionPanel {
     private final JList<TZClocksItem> clockList;
@@ -51,7 +53,7 @@ public class TZClocksSelectionPanel {
                 Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof TZClocksItem) {
                     TZClocksItem clock = (TZClocksItem) value;
-                    setText(clock.getCustomName() != null ? clock.getCustomName() : clock.getName());
+                    setText(clock.getCustomName() != null ? clock.getCustomName() : truncateString(clock.getDisplayName(),37));
                 }
                 return component;
             }

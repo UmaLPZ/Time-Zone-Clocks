@@ -11,6 +11,7 @@ public class TZClocksItem {
     @Getter
     private final UUID uuid;
     @Getter
+    @Setter
     private String name;
     @Getter
     @Setter
@@ -21,5 +22,8 @@ public class TZClocksItem {
     @Getter
     @Setter
     private String showCalendar;
+    @Getter
+    @Setter
+    private String displayName;
 
 }
