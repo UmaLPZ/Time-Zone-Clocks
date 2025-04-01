@@ -33,8 +33,8 @@ public interface TZClocksConfig extends Config {
 	@ConfigItem(
 			position = 2,
 			keyName = "showFixedGameTimesTab",
-			name = "Show Game Times Tab",
-			description = "Shows/hides the fixed 'Game Times' tab (UTC, Server Time) at the bottom.",
+			name = "Show Local/Jagex Tab",
+			description = "Shows/hides the fixed 'Local+Jagex' tab (UTC, Server Time) at the bottom.",
 			section = displaySection
 	)
 	default boolean showFixedGameTimesTab() {
@@ -53,10 +53,10 @@ public interface TZClocksConfig extends Config {
 			position = 4,
 			keyName = "timezoneSourceMode",
 			name = "Selection Mode",
-			description = "Choose how to select timezones: by region/city or by abbreviation/offset.",
+			description = "Choose how to select timezones: by region/city or by region/abbreviation.",
 			section = sourceSection
 	)
 	default TZSourceMode getTimezoneSourceMode() {
-		return TZSourceMode.REGIONAL;
+		return TZSourceMode.ABBREVIATION;
 	}
 }
