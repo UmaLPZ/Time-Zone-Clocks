@@ -1,9 +1,9 @@
-package com.tzclocks.tzdata;
+package com.tzclocks.tzutilities;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public enum TZFormatEnum { //time zone formats
+public enum TZFormatEnum {
     TWELVE_HOUR("12-Hour"),
     TWENTY_FOUR_HOUR("24-Hour");
 
