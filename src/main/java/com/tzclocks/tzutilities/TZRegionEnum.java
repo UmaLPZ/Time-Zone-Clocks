@@ -192,6 +192,7 @@ public enum TZRegionEnum {
             new NamedZoneId("Kirov", ZoneId.of("Europe/Kirov")),
             new NamedZoneId("Lisbon", ZoneId.of("Europe/Lisbon")),
             new NamedZoneId("Ljubljana", ZoneId.of("Europe/Ljubljana")),
+            new NamedZoneId("London", ZoneId.of("Europe/London")),
             new NamedZoneId("Luxembourg", ZoneId.of("Europe/Luxembourg")),
             new NamedZoneId("Madrid", ZoneId.of("Europe/Madrid")),
             new NamedZoneId("Malta", ZoneId.of("Europe/Malta")),
