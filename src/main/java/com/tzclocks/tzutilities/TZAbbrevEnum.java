@@ -380,7 +380,7 @@ public enum TZAbbrevEnum {
             for (NamedZoneId zone : zones) {
                 if (zone != null && zone.getZoneId() != null) {
                     try { ZoneId.of(zone.getZoneId().getId()); zoneList.add(zone); }
-                    catch (DateTimeParseException e) { System.err.println("Warning: Invalid ZoneId format in TZAbbrevEnum for " + zone.getDisplayName() + ": " + zone.getZoneId().getId()); }
+                    catch (DateTimeParseException e) { }
                 }
             }
         }
