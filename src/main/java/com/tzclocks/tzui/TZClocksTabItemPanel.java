@@ -98,7 +98,7 @@ public class TZClocksTabItemPanel extends JPanel {
         customNameLabel = new JLabel();
         customNameLabel.setForeground(Color.WHITE);
 
-        timezoneNameLabel = new JLabel(truncateString(item.getDisplayName(),20));
+        timezoneNameLabel = new JLabel(truncateString(item.getDisplayName(),17));
         timezoneNameLabel.setForeground(Color.WHITE);
         timezoneNameLabel.setToolTipText(item.getDisplayName());
         JPanel namePanel = new JPanel(new BorderLayout(5, 0));

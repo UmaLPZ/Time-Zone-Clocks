@@ -132,7 +132,7 @@ public class TZClocksPluginPanel extends PluginPanel {
                 String selectedDisplayName = selectedNamedZone.getDisplayName();
 
 
-                if (selectedZoneIdString.equals(TZClocksPlugin.LOCAL_ZONE_ID) || selectedZoneIdString.equals(TZClocksPlugin.JAGEX_ZONE_ID)) {
+                if (selectedZoneIdString.equals(TZClocksPlugin.LOCAL_ZONE_ID)) {
                     JOptionPane.showMessageDialog(this, selectedZoneIdString + " is already shown in the Game Times panel.", "Clock Exists", JOptionPane.INFORMATION_MESSAGE); return;
                 }
                 plugin.addTimezoneToPanel(selectedZoneIdString, selectedDisplayName);
@@ -249,12 +249,6 @@ public class TZClocksPluginPanel extends PluginPanel {
             namedZoneIdsResult.addAll(region.getNamedZoneIds());
         }
 
-
-        namedZoneIdsResult.removeIf(namedZone ->
-                namedZone.getZoneId().getId().equals(TZClocksPlugin.LOCAL_ZONE_ID) ||
-                        namedZone.getZoneId().getId().equals(TZClocksPlugin.JAGEX_ZONE_ID)
-        );
-
         Collections.sort(namedZoneIdsResult);
         return namedZoneIdsResult;
     }
@@ -333,9 +327,6 @@ public class TZClocksPluginPanel extends PluginPanel {
     }
 
 
-    public void addTimezonePanel(TZClocksItem item) { updatePanel(); }
-    public void removeTimezonePanel(TZClocksItem item) { timezonePanelsMap.remove(item); updatePanel(); }
-    public void addTabPanel(TZClocksTab tab) { updatePanel(); }
     private void updateClockListPanel() { clockListPanel.revalidate(); clockListPanel.repaint(); }
     public Map<TZClocksItem, TZClocksItemPanel> getTimezonePanelsMap() { return timezonePanelsMap; }
     public Map<TZClocksTab, TZClocksTabPanel> getTabPanelsMap() { return tabPanelsMap; }
@@ -349,8 +340,6 @@ public class TZClocksPluginPanel extends PluginPanel {
         updateClockListPanel();
     }
 
-
-    public TZClocksPlugin getPlugin() { return plugin; }
     public List<TZClocksItem> getAvailableClocks() {
         List<TZClocksItem> availableClocks = plugin.getTimezones().stream().filter(clock -> !clock.getUuid().equals(TZClocksPlugin.LOCAL_CLOCK_UUID) && !clock.getUuid().equals(TZClocksPlugin.JAGEX_CLOCK_UUID)).collect(Collectors.toList());
         for (TZClocksTab userTab : plugin.getTabs()) { if (userTab.getClocks() != null) { userTab.getClocks().forEach(id -> availableClocks.removeIf(c -> c.getUuid().equals(id))); } } return availableClocks;

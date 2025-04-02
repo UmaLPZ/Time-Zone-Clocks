@@ -16,9 +16,7 @@ public class NamedZoneId implements Comparable<NamedZoneId> {
     private final ZoneId zoneId;
 
     public NamedZoneId(String displayName, ZoneId zoneId) {
-
         if (displayName == null || displayName.trim().isEmpty()) {
-
             this.displayName = (zoneId != null) ? zoneId.getId() : "Unknown Zone";
         } else {
             this.displayName = displayName;
@@ -43,18 +41,22 @@ public class NamedZoneId implements Comparable<NamedZoneId> {
         return this.displayName.compareToIgnoreCase(other.displayName);
     }
 
-
+    /**
+     * Compares based on the display name for equality.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         NamedZoneId that = (NamedZoneId) o;
-
-        return zoneId.equals(that.zoneId);
+        return Objects.equals(displayName, that.displayName);
     }
 
+    /**
+     * Hashes based on the display name.
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(zoneId);
+        return Objects.hash(displayName);
     }
 }
