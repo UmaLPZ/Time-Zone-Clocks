@@ -13,7 +13,7 @@ import java.util.List;
  * organized by geographical/functional region.
  */
 public enum TZAbbrevEnum {
-    ALL_ABBREV("All Abbreviations"),
+    ALL_ABBREV("Regions/Abbrev."),
 
     AFRICA("Africa",
             new NamedZoneId("CAT - Central Africa Time", ZoneId.of("UTC+02:00")),

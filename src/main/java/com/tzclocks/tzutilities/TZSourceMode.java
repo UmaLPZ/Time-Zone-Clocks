@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum TZSourceMode {
-    REGIONAL("Region / Zone ID"),
-    ABBREVIATION("Abbreviation / Offset");
+    ABBREVIATION("Region/Abbreviation"),
+    REGIONAL("Region/Zone ID");
 
     private final String name;
 
