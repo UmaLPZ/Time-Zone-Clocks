@@ -3,16 +3,17 @@ package com.tzclocks.tzutilities;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public enum TZFormatEnum {
-    TWELVE_HOUR("12-Hour"),
-    TWENTY_FOUR_HOUR("24-Hour");
+public enum TZFormatEnum
+{
+	TWELVE_HOUR("12-Hour"),
+	TWENTY_FOUR_HOUR("24-Hour");
 
-    private final String name;
+	private final String name;
 
-    @Override
-    public String toString()
-    {
-        return name;
-    }
+	@Override
+	public String toString()
+	{
+		return name;
+	}
 }
 

@@ -8,8 +8,9 @@ import java.util.UUID;
 
 @AllArgsConstructor
 @Getter
-public class TZClocksTabData {
-    private String name;
-    private boolean isCollapsed;
-    private List<UUID> clocks;
+public class TZClocksTabData
+{
+	private String name;
+	private boolean isCollapsed;
+	private List<UUID> clocks;
 }
